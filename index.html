@@ -683,6 +683,14 @@
         outline: 2px solid var(--chart-accent, #21557f);
         outline-offset: 1px;
       }
+      .slide svg g.foldhit:hover rect,
+      .slide svg g.foldhit:focus rect {
+        stroke: var(--chart-accent, #21557f);
+      }
+      .slide svg g.foldhit:hover text,
+      .slide svg g.foldhit:focus text {
+        fill: var(--chart-accent, #21557f);
+      }
       .slide svg .navpill {
         opacity: 0;
         pointer-events: none;
@@ -2200,7 +2208,7 @@ People,Operating model design,Mar 2026,May 2026,,`;
             const drill = nav && !scope;
             if (drill)
               cp.push(
-                `<g data-view="${esc(La.lane.name)}" tabindex="0" role="button" aria-label="View ${esc(La.lane.name)} as its own slide">`,
+                `<g class="foldhit" data-view="${esc(La.lane.name)}" tabindex="0" role="button" aria-label="View ${esc(La.lane.name)} as its own slide">`,
               );
             cp.push(
               `<rect x="${fx1.toFixed(1)}" y="${fy.toFixed(1)}" width="${(fx2 - fx1).toFixed(1)}" height="${L.foldH - 6}" rx="5" fill="none" stroke="${T.line}" stroke-dasharray="4 3"${drill ? ' pointer-events="all"' : ""}/>`,
