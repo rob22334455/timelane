@@ -94,3 +94,9 @@ item:
 9. Today line on, off, and out of range (hidden without error)
 
 ## The sample must permanently exercise every checklist case.
+
+## Decided, do not revisit without the user
+
+- Dependency arrows: never (see Hard rules). Sequence is position.
+- Sub-plans: planned for v2 — optional "Sub-lane" CSV column,
+  lane drill-down mirroring Orgami's View team pattern. Not in v1.

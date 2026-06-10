@@ -7,14 +7,14 @@
       content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; base-uri 'none'; form-action 'none'"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Orgami — org charts, folded to fit</title>
+    <title>Timelane — your plan, on a page</title>
     <meta
       name="description"
-      content="Orgami builds clean, slide-ready org charts from a CSV or quick form — big teams fold automatically so everything fits on one 16:9 slide. Runs entirely in your browser; your data never leaves your machine."
+      content="Timelane builds clean, slide-ready roadmaps from a CSV or quick form — lanes fold automatically so the whole plan fits on one 16:9 slide. Runs entirely in your browser; your data never leaves your machine."
     />
     <link
       rel="icon"
-      href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" rx="5" fill="%23143A5C"/><path d="M29 3 L29 14 L18 3 Z" fill="%237FA8C9"/><rect x="8" y="13" width="16" height="4" rx="2" fill="white" opacity="0.95"/><rect x="8" y="20" width="10" height="4" rx="2" fill="white" opacity="0.7"/></svg>'
+      href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" rx="5" fill="%23143A5C"/><path d="M29 3 L29 14 L18 3 Z" fill="%237FA8C9"/><rect x="6" y="11" width="11" height="3.5" rx="1.75" fill="white" opacity="0.95"/><rect x="11" y="17.5" width="14" height="3.5" rx="1.75" fill="white" opacity="0.7"/><rect x="8" y="24" width="8" height="3.5" rx="1.75" fill="white" opacity="0.5"/></svg>'
     />
     <style>
       :root {
@@ -185,6 +185,19 @@
         font-weight: 400;
         color: var(--sub);
       }
+      .menu-item:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .menu-item:disabled:hover {
+        background: none;
+      }
+      .menu-chk {
+        padding: 9px 9px 7px;
+        border-top: 1px solid var(--hair-2);
+        margin-top: 5px;
+        font-size: 12.5px;
+      }
 
       /* ---------- layout ---------- */
       .wrap {
@@ -340,27 +353,26 @@
         color: var(--bad);
       }
 
-      /* people editor */
-      .people-list {
+      /* item editor */
+      .item-list {
         display: flex;
         flex-direction: column;
         gap: 7px;
       }
-      .person {
+      .item-card {
         border: 1px solid var(--hair);
         border-radius: var(--radius);
         padding: 9px 9px 8px;
         background: #fcfcfd;
         position: relative;
       }
-      .person .grid {
+      .item-card .grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 6px;
         margin-bottom: 6px;
       }
-      .person input,
-      .person select {
+      .item-card input {
         font-family: var(--ui);
         font-size: 12.5px;
         border: 1px solid var(--hair);
@@ -370,21 +382,20 @@
         background: #fff;
         color: var(--ink);
       }
-      .person select {
+      .item-card .grid .full {
         grid-column: 1 / -1;
       }
-      .person .grid .full {
-        grid-column: 1 / -1;
-      }
-      .person .grid .tagrow {
+      .item-card .grid .tagrow {
         grid-column: 1 / -1;
         display: flex;
         gap: 5px;
         align-items: center;
       }
-      .person .grid .tagrow input {
-        flex: 1;
-        min-width: 0;
+      .dotlbl {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--sub);
+        margin-right: 4px;
       }
       .tagdot {
         width: 15px;
@@ -403,7 +414,7 @@
         outline: 2px solid var(--accent);
         outline-offset: 2px;
       }
-      .person .del {
+      .item-card .del {
         position: absolute;
         top: -7px;
         right: -7px;
@@ -420,11 +431,11 @@
         align-items: center;
         justify-content: center;
       }
-      .person:hover .del,
-      .person:focus-within .del {
+      .item-card:hover .del,
+      .item-card:focus-within .del {
         display: flex;
       }
-      .person .del:hover {
+      .item-card .del:hover {
         color: var(--bad);
         border-color: var(--bad);
       }
@@ -569,78 +580,6 @@
       }
       .slide .placeholder span {
         font-size: 12.5px;
-      }
-
-      /* breadcrumb + drill-down chrome (never exported) */
-      .crumbs {
-        display: flex;
-        align-items: center;
-        gap: 3px;
-        flex-wrap: wrap;
-        margin: -3px 0 9px;
-        min-height: 27px;
-      }
-      .crumb {
-        background: none;
-        border: none;
-        font-family: var(--ui);
-        font-size: 12.5px;
-        font-weight: 600;
-        color: var(--accent);
-        cursor: pointer;
-        padding: 3px 4px;
-        border-radius: 4px;
-      }
-      .crumb:hover {
-        text-decoration: underline;
-        text-underline-offset: 2px;
-      }
-      .crumb:focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 1px;
-      }
-      .crumb-cur {
-        font-size: 12.5px;
-        font-weight: 700;
-        color: var(--ink);
-        padding: 3px 4px;
-      }
-      .crumb-sep {
-        color: var(--faint);
-        font-size: 12.5px;
-      }
-      .crumb-back {
-        margin-left: auto;
-        padding: 4px 11px;
-        font-size: 12px;
-      }
-      .slide svg [data-drill] {
-        cursor: pointer;
-      }
-      .slide svg [data-drill]:focus {
-        outline: none;
-      }
-      .slide svg [data-drill]:focus-visible {
-        outline: 2px solid var(--chart-accent, #21557f);
-        outline-offset: 1px;
-      }
-      .slide svg .navpill {
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.12s;
-      }
-      .slide svg g.crew:hover .navpill,
-      .slide svg .navpill:focus {
-        opacity: 1;
-        pointer-events: auto;
-      }
-      .slide svg [data-ghost]:hover rect,
-      .slide svg [data-ghost]:focus rect {
-        stroke: var(--chart-accent, #21557f);
-      }
-      .slide svg [data-ghost]:hover text,
-      .slide svg [data-ghost]:focus text {
-        fill: var(--chart-accent, #21557f);
       }
 
       /* ---------- about popover ---------- */
@@ -877,8 +816,8 @@
   <body>
     <header>
       <div class="brand">
-        <span class="mark">Org<span class="tail">a</span>mi</span>
-        <span class="tag">org charts, folded to fit</span>
+        <span class="mark">Time<span class="tail">lane</span></span>
+        <span class="tag">your plan, on a page</span>
       </div>
       <div class="spacer"></div>
       <button class="btn btn-ghost" id="btnGuide">Guide</button>
@@ -897,24 +836,25 @@
           ▾
         </button>
         <div class="menu" id="exportMenu" role="menu" hidden>
-          <div class="menu-h" id="menuScope">This slide — Whole org</div>
+          <div class="menu-h">This slide</div>
           <button class="menu-item" role="menuitem" data-act="png">
             PNG image
           </button>
           <button class="menu-item" role="menuitem" data-act="svg">
             SVG<span class="menu-sub">editable in PowerPoint</span>
           </button>
-          <div class="menu-h">Whole org</div>
-          <button class="menu-item" role="menuitem" data-act="deck">
-            Deck (.pptx)<span class="menu-sub">one slide per team</span>
-          </button>
-          <button class="menu-item" role="menuitem" data-act="all">
-            All teams<span class="menu-sub">a PNG per team</span>
+          <div class="menu-h">Whole plan</div>
+          <button class="menu-item" role="menuitem" data-act="deck" disabled>
+            Deck (.pptx)<span class="menu-sub">coming soon</span>
           </button>
           <div class="menu-h">Your data</div>
           <button class="menu-item" role="menuitem" data-act="csv">
             CSV<span class="menu-sub">reopen or edit later</span>
           </button>
+          <label class="chk menu-chk"
+            ><input type="checkbox" id="chkTransparent" /> Transparent
+            background</label
+          >
         </div>
       </div>
     </header>
@@ -940,15 +880,15 @@
           <div class="sec">
             <h3>Import CSV</h3>
             <p class="hint">
-              Columns: <b>Name, Role, Reports&nbsp;To</b> (manager's name, blank
-              for the top), then optional
-              <b>Detail, Tag, Tag&nbsp;Colour</b> (green, amber, red, blue or
-              grey). Header row optional.
+              Columns: <b>Lane, Item, Start, End, Status</b> — Lane, Item and
+              Start required. A blank End (or an End equal to the Start) makes
+              a milestone. Status: green, amber, red, blue or grey. Header row
+              optional.
             </p>
             <textarea
               id="csvBox"
               spellcheck="false"
-              placeholder="Name,Role,Reports To&#10;Jane Cole,Chief Executive,&#10;Sam Reid,Finance Director,Jane Cole"
+              placeholder="Lane,Item,Start,End,Status&#10;Technology,ERP implementation,01/03/2026,18/12/2026,amber&#10;Technology,ERP go-live,04/01/2027,,"
             ></textarea>
             <div class="row">
               <button class="btn btn-sec" id="btnParse">Use this data</button>
@@ -956,19 +896,21 @@
               <input type="file" id="csvFile" accept=".csv,text/csv" />
             </div>
             <div class="status" id="csvStatus" role="status"></div>
+            <div class="status" id="dataWarn" role="status"></div>
           </div>
 
           <div class="sec">
             <h3>
-              People
+              Items
               <span
-                id="peopleCount"
+                id="itemCount"
                 style="font-weight: 600; color: var(--faint)"
               ></span>
             </h3>
-            <div class="people-list" id="peopleList"></div>
+            <div class="item-list" id="itemList"></div>
+            <datalist id="laneList"></datalist>
             <div class="row">
-              <button class="btn btn-line" id="btnAdd">+ Add person</button>
+              <button class="btn btn-line" id="btnAdd">+ Add item</button>
               <button class="btn btn-line" id="btnSample">Load sample</button>
               <button class="btn btn-line" id="btnClear">Clear all</button>
               <button class="btn btn-line" id="btnFresh">Start fresh</button>
@@ -983,7 +925,7 @@
             <input
               type="text"
               id="titleBox"
-              placeholder="e.g. Technology — proposed structure"
+              placeholder="e.g. Transformation — plan on a page"
               maxlength="80"
             />
           </div>
@@ -992,32 +934,29 @@
             <div class="swatches" id="swatches"></div>
           </div>
           <div class="sec">
-            <h3>Reports shown per manager</h3>
+            <h3>Rows shown per lane</h3>
             <p class="hint">
-              Beyond this, the chart folds the rest into a "+ n more roles" card
-              so the slide stays clean — click it to see everyone.
+              Beyond this, a lane folds the rest into a "+ n more items" strip
+              so the slide stays clean — the longest-running items stay
+              visible.
             </p>
             <div class="slider-row">
               <input
                 type="range"
-                id="maxVis"
-                min="3"
-                max="10"
-                value="6"
-                aria-label="Maximum visible reports per manager"
+                id="maxRows"
+                min="2"
+                max="8"
+                value="4"
+                aria-label="Maximum rows shown per lane"
               />
-              <span class="slider-val" id="maxVisVal">6</span>
+              <span class="slider-val" id="maxRowsVal">4</span>
             </div>
           </div>
           <div class="sec">
             <h3>Detail</h3>
             <label class="chk"
-              ><input type="checkbox" id="chkCounts" checked /> Show "+n"
-              team-size chips on people with their own reports</label
-            >
-            <label class="chk" style="margin-top: 8px"
-              ><input type="checkbox" id="chkTransparent" /> Transparent — hide
-              the title and background, for pasting straight onto a slide</label
+              ><input type="checkbox" id="chkToday" checked /> Show the today
+              line</label
             >
           </div>
         </div>
@@ -1026,7 +965,7 @@
       <main>
         <div class="stage">
           <div class="restorebar" id="restoreBar" hidden>
-            <span>Restored your last chart — saved on this device only.</span>
+            <span>Restored your last plan — saved on this device only.</span>
             <button class="linklike" id="restoreFresh">Start fresh</button>
             <button class="rx" id="restoreDismiss" aria-label="Dismiss">×</button>
           </div>
@@ -1034,11 +973,10 @@
             <span class="lbl">Slide preview · 16:9</span>
             <span class="count" id="stageCount"></span>
           </div>
-          <nav class="crumbs" id="crumbs" aria-label="Chart scope"></nav>
           <div class="slide" id="slide">
             <div class="placeholder" id="placeholder">
-              <b>No people yet</b>
-              <span>Paste a CSV, load the sample, or add people by hand.</span>
+              <b>No items yet</b>
+              <span>Paste a CSV, load the sample, or add items by hand.</span>
               <button class="linklike" id="phGuide" style="font-size: 12.5px">
                 Open the Guide
               </button>
@@ -1053,24 +991,24 @@
         <button class="about-close" id="aboutClose" aria-label="Close">
           ×
         </button>
-        <h2 id="aboutTitle">About Orgami</h2>
+        <h2 id="aboutTitle">About Timelane</h2>
         <p>
-          Orgami builds clean, slide-ready org charts you can paste straight
-          into PowerPoint. Import a CSV or build one by hand, click into any
-          team, and export crisp images.
+          Timelane builds clean, slide-ready roadmaps you can paste straight
+          into PowerPoint. Import a CSV or build one by hand, and export crisp
+          images.
         </p>
         <p>
-          Your data is safe. Orgami runs entirely on your machine, in your
+          Your data is safe. Timelane runs entirely on your machine, in your
           browser — there's nothing to install, no account, no server and no
           third-party services. Nothing you type or import ever leaves your
           computer, and the page even works with no internet connection.
         </p>
         <p>
           Sceptical? Good. Open your browser's developer tools, watch the
-          Network tab, and build a chart — you'll see nothing sent.
+          Network tab, and build a roadmap — you'll see nothing sent.
         </p>
         <p>
-          Your chart is saved in your browser on this device so you don't lose
+          Your plan is saved in your browser on this device so you don't lose
           work — use Start fresh to remove it.
         </p>
       </div>
@@ -1088,19 +1026,19 @@
           <ol>
             <li>
               <b>Get your data in.</b> On the Data tab, paste a CSV and press
-              <b>Use this data</b>, open a .csv file, or build the org by hand
-              with <b>+ Add person</b> (<b>Load sample</b> restores the demo
-              org).
+              <b>Use this data</b>, open a .csv file, or build the plan by hand
+              with <b>+ Add item</b> (<b>Load sample</b> restores the demo
+              plan).
             </li>
             <li>
-              <b>View a team.</b> Hover (or Tab to) any card with a team and
-              press <b>View team →</b> — that person becomes the top of the
-              slide.
+              <b>Shape the slide.</b> On the Slide tab, set a title, pick a
+              theme, choose how many rows each lane shows before it folds, and
+              toggle the today line.
             </li>
             <li>
               <b>Export for PowerPoint.</b> Click <b>Export PNG</b> (top right)
-              — or open its <b>▾</b> menu for SVG, a full deck and more. Every
-              view is a ready-made 16:9 slide.
+              — or open its <b>▾</b> menu for SVG and your CSV. The slide is a
+              ready-made 16:9 picture.
             </li>
           </ol>
         </section>
@@ -1117,49 +1055,44 @@
             </thead>
             <tbody>
               <tr>
-                <td>Name</td>
+                <td>Lane</td>
+                <td>required — the horizontal band the item sits in</td>
+                <td>Technology</td>
+              </tr>
+              <tr>
+                <td>Item</td>
+                <td>required — a bar with a start and end</td>
+                <td>ERP implementation</td>
+              </tr>
+              <tr>
+                <td>Start</td>
                 <td>required</td>
-                <td>Jordan Lee</td>
+                <td>01/03/2026</td>
               </tr>
               <tr>
-                <td>Role</td>
-                <td>required</td>
-                <td>Head of Operations</td>
+                <td>End</td>
+                <td>blank, or equal to Start, makes a milestone</td>
+                <td>18/12/2026</td>
               </tr>
               <tr>
-                <td>Reports To</td>
-                <td>required — blank for the top person</td>
-                <td>Alex Morgan</td>
-              </tr>
-              <tr>
-                <td>Detail</td>
-                <td>optional third line</td>
-                <td>Manchester</td>
-              </tr>
-              <tr>
-                <td>Tag</td>
-                <td>optional chip</td>
-                <td>NEW HIRE</td>
-              </tr>
-              <tr>
-                <td>Tag Colour</td>
-                <td>green, amber, red, blue or grey</td>
-                <td>green</td>
+                <td>Status</td>
+                <td>green, amber, red, blue or grey (the default)</td>
+                <td>amber</td>
               </tr>
             </tbody>
           </table>
-          <details class="gmore">
-            <summary>Two people with the same name?</summary>
-            <p>
-              Add optional <b>ID</b> and <b>Manager ID</b> columns and Orgami
-              will use those instead.
-            </p>
-          </details>
+          <p>
+            Dates can be <b>01/03/2026</b>, <b>2026-03-01</b>, <b>Mar 2026</b>
+            or <b>Q1 2026</b>. Day first, always: 04/05/2026 is 4 May, never
+            5 April. A month or quarter counts as its first day in a Start and
+            its last day in an End. Anything Timelane can't read produces a
+            warning naming the row — never a silent guess.
+          </p>
           <p>
             Header row optional — with headers, column order doesn't matter.
           </p>
           <p>
-            Your chart is saved in your browser on this device so you don't
+            Your plan is saved in your browser on this device so you don't
             lose work — use <b>Start fresh</b> to remove it.
           </p>
           <p>
@@ -1170,18 +1103,18 @@
         </section>
 
         <section class="gsec">
-          <h3>Viewing teams</h3>
+          <h3>Lanes &amp; folding</h3>
           <p>
-            <b>View team →</b> re-draws the slide with that person at the top.
-            The breadcrumb above the slide shows where you are — click any step
-            to jump there, or use <b>← Back</b> or <b>Esc</b> to go up one
-            level.
+            Lanes appear in the order your data first mentions them. Items in
+            the same lane that overlap in time stack into rows; milestones (a
+            blank End, or an End equal to the Start) draw as diamonds on the
+            lane baseline.
           </p>
           <p>
-            <b>"+ n more roles"</b> means a manager has more reports than fit
-            cleanly — the rest fold into that card (click it to see everyone).
-            Adjust the limit with <b>Reports shown per manager</b> on the Slide
-            tab.
+            <b>"+ n more items"</b> means a lane has more rows than fit
+            cleanly — the longest-running items stay visible and the rest fold
+            into that strip. Adjust the limit with <b>Rows shown per lane</b>
+            on the Slide tab.
           </p>
         </section>
 
@@ -1195,28 +1128,15 @@
           <p>
             <b>This slide</b> — <b>PNG image</b>, or <b>SVG</b> (editable in
             PowerPoint: insert the file, then right-click it →
-            <b>Convert to Shape</b>). Tick <b>Transparent</b> on the Slide tab
-            to drop the title and background first.
+            <b>Convert to Shape</b> for native, editable bars).
+            <b>Whole plan</b> — <b>Deck (.pptx)</b> is coming soon.
+            <b>Your data</b> — <b>CSV</b>, reopen or edit later.
           </p>
           <p>
-            <b>Whole org</b> — <b>Deck (.pptx)</b>, one slide per team; or
-            <b>All teams</b>, a PNG per team (your browser may ask to allow
-            multiple downloads). <b>Your data</b> — <b>CSV</b>, reopen or edit
-            later.
-          </p>
-        </section>
-
-        <section class="gsec">
-          <h3>Deck export</h3>
-          <p>
-            <b>Deck (.pptx)</b> in the <b>Export</b> menu builds a single
-            PowerPoint file: a title slide, the whole org, then one slide per
-            team — same order as the chart. Every box is a native, editable
-            PowerPoint shape, and each team is grouped so it moves as one unit.
-          </p>
-          <p>
-            One honest note: edits made in PowerPoint are not reflected back in
-            Orgami — your CSV stays the source of truth.
+            Tick <b>Transparent background</b> in the menu to export with
+            nothing behind the chart — a PNG with an alpha background, an SVG
+            without its background rectangle — for pasting straight onto
+            branded slide templates.
           </p>
         </section>
 
@@ -1233,18 +1153,14 @@
 
     <script>
       /* ================= state ================= */
-      let people = []; // {name, role, manager}
+      let items = []; // {lane, item, start, end, status, row} — dates stay as typed, parsed at render
       let settings = {
         title: "",
         theme: "marine",
-        maxVis: 6,
-        counts: true,
+        maxRows: 4,
+        today: true,
         transparent: false,
       };
-      let uid = 0;
-      let scopePath = []; // people[] entries, top ancestor → scoped person; [] = whole org
-      let currentScope = null; // resolved forest node for the current render
-      const navNodes = new Map(); // node.key → node, drill-down click targets for this render
 
       const THEMES = {
         marine: {
@@ -1257,6 +1173,7 @@
           line: "#C3CBD6",
           ink: "#1A2530",
           sub: "#65707C",
+          bar: "#54718C",
         },
         claret: {
           label: "Claret",
@@ -1268,6 +1185,7 @@
           line: "#D2C4C8",
           ink: "#2A1B1F",
           sub: "#7A666C",
+          bar: "#86646F",
         },
         forest: {
           label: "Forest",
@@ -1279,6 +1197,7 @@
           line: "#C2D1CA",
           ink: "#1B2620",
           sub: "#647069",
+          bar: "#5E7569",
         },
         graphite: {
           label: "Graphite",
@@ -1290,6 +1209,7 @@
           line: "#C8CBD0",
           ink: "#1B1E23",
           sub: "#6B7077",
+          bar: "#63686F",
         },
         ochre: {
           label: "Ochre",
@@ -1301,75 +1221,77 @@
           line: "#D6CBB3",
           ink: "#2A2418",
           sub: "#7C7260",
+          bar: "#84725A",
         },
       };
 
-      /* tag chip palette — fixed fills chosen to stay legible on every theme's cards
-   (all themes use white/near-white card fills); white keyline lifts the chip
-   off card edges and the dark root card alike */
-      const TAGC = {
-        green: { bg: "#1E7A4A", fg: "#FFFFFF" },
-        amber: { bg: "#F0B429", fg: "#5C4503" },
-        red: { bg: "#9F2D3C", fg: "#FFFFFF" },
-        blue: { bg: "#2B6CB0", fg: "#FFFFFF" },
-        grey: { bg: "#E2E5EA", fg: "#42474E" },
+      /* status fills — green/amber/red/blue are fixed so they read as status at
+   a glance on every theme; grey (the default) is theme-tinted via THEMES[].bar
+   so an unstatused plan still carries its theme. Amber gets dark text, the
+   rest take white — all legible at bar sizes. */
+      const STATUS = {
+        green: { bg: "#2E7D52", fg: "#FFFFFF" },
+        amber: { bg: "#E8A33D", fg: "#553F08" },
+        red: { bg: "#A03B49", fg: "#FFFFFF" },
+        blue: { bg: "#33689E", fg: "#FFFFFF" },
       };
+      const STATUS_KEYS = ["green", "amber", "red", "blue", "grey"];
+      /* editor swatch colours only — bars take theirs from STATUS / THEMES */
+      const DOT = {
+        green: "#2E7D52",
+        amber: "#E8A33D",
+        red: "#A03B49",
+        blue: "#33689E",
+        grey: "#8A9099",
+      };
+      function statusFill(T, key) {
+        return STATUS[key] || { bg: T.bar, fg: "#FFFFFF" };
+      }
 
-      /* Jack Mercer's nine leaf reports are deliberate: they keep the wide-flat
-   wrap (drill Jack) and folding ("+ n more roles" in Marcus Chen's view)
-   regression shapes in the sample — see the checklist in CLAUDE.md. */
-      const SAMPLE = `Name,Role,Reports To,Detail,Tag,Tag Colour
-Alexandra Reyes,Chief Executive Officer,,London HQ
-Daniel Okonkwo,Chief Technology Officer,Alexandra Reyes,Berlin office
-Sophie Lindgren,Chief Financial Officer,Alexandra Reyes
-Marcus Chen,Chief Operating Officer,Alexandra Reyes
-Imogen Hartley,Chief People Officer,Alexandra Reyes
-Rafael Souza,Chief Commercial Officer,Alexandra Reyes
-Nina Vasquez,General Counsel,Alexandra Reyes
-Tobias Adler,VP Engineering,Daniel Okonkwo
-Grace Mbeki,VP Product,Daniel Okonkwo
-Hana Sato,Head of Data & AI,Daniel Okonkwo,,NEW HIRE,green
-Viktor Petrov,Head of Information Security,Daniel Okonkwo
-Lena Fischer,Head of IT Operations,Daniel Okonkwo,,INTERIM,blue
-Connor Walsh,Platform Engineering Lead,Tobias Adler
-Aisha Rahman,Frontend Engineering Lead,Tobias Adler
-Jonas Berg,Backend Engineering Lead,Tobias Adler
-Priya Nair,QA & Release Manager,Tobias Adler
-Sam Whitaker,DevOps Lead,Tobias Adler
-Mei-Ling Zhou,Senior Product Manager,Grace Mbeki
-Oliver Krantz,Product Designer,Grace Mbeki
-Tara Donnelly,UX Research Lead,Grace Mbeki
-Ben Carmichael,Financial Controller,Sophie Lindgren
-Lucia Romano,Head of FP&A,Sophie Lindgren
-Henrik Olsen,Head of Procurement,Sophie Lindgren
-Farah El-Amin,Treasury Manager,Sophie Lindgren
-Jack Mercer,VP Manufacturing,Marcus Chen,Manchester plant
-Carmen Ortiz,VP Supply Chain,Marcus Chen,Rotterdam
-Ade Balogun,Head of Quality,Marcus Chen,,VACANCY,amber
-Elsa Nyström,Logistics Manager,Carmen Ortiz
-Ravi Iyer,Demand Planning Manager,Carmen Ortiz
-Stefan Brandt,Plant Manager — North,Jack Mercer
-Rosa Jimenez,Plant Manager — South,Jack Mercer
-Ewa Zielinska,Production Shift Lead A,Jack Mercer
-Noah Petersen,Production Shift Lead B,Jack Mercer,,NEW HIRE,green
-Lucia Vidal,Maintenance Supervisor,Jack Mercer
-Gareth Hughes,Tooling & Calibration Lead,Jack Mercer
-Selin Demir,Production Planner,Jack Mercer
-Abeba Tesfaye,EHS Officer,Jack Mercer
-Marco Bianchi,Continuous Improvement Lead,Jack Mercer
-Kate Moreland,Head of Talent Acquisition,Imogen Hartley
-Dmitri Volkov,Head of Reward,Imogen Hartley
-Yuki Tanaka,L&D Manager,Imogen Hartley
-Leo Marchetti,VP Sales,Rafael Souza
-Anya Kowalczyk,VP Marketing,Rafael Souza
-Sean Gallagher,Head of Partnerships,Rafael Souza
-Maddie Frost,Brand Manager,Anya Kowalczyk
-Theo Lambert,Growth Marketing Lead,Anya Kowalczyk`;
+      /* The sample is the permanent regression fixture (CLAUDE.md checklist):
+   Technology's ten overlapping bars pin stacking + folding; Gate 2 and
+   Gate 3 share a date to pin milestone clustering; all four accepted date
+   formats appear; "Quantum pilot" (impossible date) and "Forklift
+   replacement" (ends before it starts) keep the import warnings honest —
+   the warning on Load sample is deliberate. */
+      const SAMPLE = `Lane,Item,Start,End,Status
+Technology,Core platform assessment,02/02/2026,27/03/2026,
+Technology,ERP implementation,16/03/2026,18/12/2026,amber
+Technology,Data warehouse build,01/04/2026,30/10/2026,
+Technology,Cloud migration — wave 1,04/05/2026,28/08/2026,
+Technology,Identity & access rollout,Jun 2026,Nov 2026,
+Technology,Cyber uplift programme,2026-06-01,2027-04-30,green
+Technology,Legacy CRM decommission,Q3 2026,Q1 2027,
+Technology,Network refresh,13/07/2026,11/12/2026,
+Technology,Cloud migration — wave 2,01/09/2026,26/02/2027,
+Technology,Service desk re-platform,05/10/2026,26/03/2027,
+Technology,ERP go-live,04/01/2027,04/01/2027,
+Technology,Quantum pilot,31/02/2026,30/06/2026,
+People,Operating model design,09/02/2026,29/05/2026,
+People,Leadership hiring,Mar 2026,Aug 2026,
+People,Consultation & restructure,01/06/2026,30/09/2026,red
+Operations,Site consolidation review,16/02/2026,12/06/2026,
+Operations,Warehouse automation pilot,Q2 2026,Q4 2026,blue
+Operations,Process re-engineering,01/07/2026,31/03/2027,
+Operations,Forklift replacement,01/12/2026,01/10/2026,
+Operations,New DC operational,01/03/2027,,
+Finance,Chart of accounts redesign,02/03/2026,31/07/2026,
+Finance,Planning & reporting suite,01/08/2026,30/04/2027,
+Finance,Shared services transition,Q4 2026,Q2 2027,amber
+Finance,First close in new ledger,05/02/2027,,
+Commercial,Pricing review,06/04/2026,28/08/2026,
+Commercial,Digital channel launch,01/09/2026,18/12/2026,green
+Commercial,Key account programme,2027-01-04,2027-06-25,
+Governance,Programme mobilisation,02/02/2026,27/02/2026,
+Governance,Benefits tracking,02/03/2026,25/06/2027,
+Governance,Gate 1 — case approved,27/03/2026,,
+Governance,Gate 2 — design freeze,25/09/2026,,
+Governance,Gate 3 — readiness,25/09/2026,,`;
 
-      const CSV_TEMPLATE = `Name,Role,Reports To,Detail,Tag,Tag Colour
-Alex Morgan,Chief Executive,,London HQ,,
-Jordan Lee,Head of Operations,Alex Morgan,Manchester,INTERIM,blue
-Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
+      const CSV_TEMPLATE = `Lane,Item,Start,End,Status
+Technology,ERP implementation,01/03/2026,18/12/2026,amber
+Technology,ERP go-live,04/01/2027,,
+People,Operating model design,Mar 2026,May 2026,`;
 
       /* ================= helpers ================= */
       const $ = (s) => document.querySelector(s);
@@ -1451,247 +1373,276 @@ Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
         if (!rows.length)
           return { err: "Nothing to parse — the input looks empty." };
         /* with a header row, columns are mapped by name so order doesn't matter;
-     headerless files fall back to positional columns 1-6. The ID columns are
-     header-mapped ONLY — never positional — so plain files can't hit them. */
+     headerless files fall back to positional columns 1-5 */
         const HEADERS = {
-          name: ["name", "full name", "employee name", "employee"],
-          role: ["role", "title", "job title", "position"],
-          manager: [
-            "reports to",
-            "manager",
-            "reports_to",
-            "line manager",
-            "manager name",
-          ],
-          detail: ["detail", "location", "notes"],
-          tag: ["tag", "flag", "status"],
-          tagColor: ["tag colour", "tag color", "colour"],
-          id: ["employee id", "id", "staff id"],
-          managerId: ["manager id", "reports to id", "manager employee id"],
+          lane: ["lane", "workstream", "track", "category"],
+          item: ["item", "name", "title", "activity", "deliverable"],
+          start: ["start", "start date", "from", "begin"],
+          end: ["end", "end date", "finish", "finish date", "to", "due"],
+          status: ["status", "rag", "colour", "color"],
         };
-        const idx = {
-          name: 0,
-          role: 1,
-          manager: 2,
-          detail: 3,
-          tag: 4,
-          tagColor: 5,
-          id: -1,
-          managerId: -1,
-        };
-        let start = 0;
+        const idx = { lane: 0, item: 1, start: 2, end: 3, status: 4 };
+        let first = 0;
         const h0 = rows[0].map(norm);
         if (
           h0.some((c) =>
             Object.values(HEADERS).some((list) => list.includes(c)),
           )
         ) {
-          /* a header row means header-mapped ONLY — a field whose header is
-             absent must NOT silently grab another column by position (that
-             corrupts manager/role on real HRIS exports). Name keeps a
-             column-0 fallback; role/manager fall back to their classic
-             positions only when nothing else has claimed that column. */
-          start = 1;
+          /* a header row means header-mapped first; a required field whose
+             header is absent falls back to its classic position only when
+             nothing else has claimed that column */
+          first = 1;
           for (const f of Object.keys(HEADERS))
             idx[f] = h0.findIndex((c) => HEADERS[f].includes(c));
-          if (idx.name === -1) idx.name = 0;
           [
-            ["role", 1],
-            ["manager", 2],
+            ["lane", 0],
+            ["item", 1],
+            ["start", 2],
+            ["end", 3],
           ].forEach(([f, pos]) => {
             if (idx[f] === -1 && !Object.values(idx).includes(pos))
               idx[f] = pos;
           });
         }
-        /* ID matching engages only when BOTH columns are present; names then
-           become display-only and reporting lines come from IDs alone */
-        const idMode = idx.id !== -1 && idx.managerId !== -1;
         const out = [];
-        let skipped = 0,
-          badColors = 0;
-        for (let i = start; i < rows.length; i++) {
+        let badStatus = 0;
+        for (let i = first; i < rows.length; i++) {
           const r = rows[i];
           const cell = (j) => (j >= 0 ? (r[j] || "").trim() : "");
-          const name = cell(idx.name);
-          if (!name) {
-            skipped++;
-            continue;
-          }
-          let tagColor = norm(cell(idx.tagColor));
-          if (tagColor === "gray") tagColor = "grey";
-          if (tagColor && !TAGC[tagColor]) {
-            badColors++;
-            tagColor = "grey";
+          let status = norm(cell(idx.status));
+          if (status === "gray") status = "grey";
+          if (status === "grey") status = ""; // grey IS the default
+          if (status && !STATUS[status]) {
+            badStatus++;
+            status = "";
           }
           out.push({
-            name,
-            role: cell(idx.role),
-            manager: cell(idx.manager),
-            detail: cell(idx.detail),
-            tag: cell(idx.tag),
-            tagColor,
-            id: idMode ? cell(idx.id) : "",
-            managerId: idMode ? cell(idx.managerId) : "",
+            lane: cell(idx.lane),
+            item: cell(idx.item),
+            start: cell(idx.start),
+            end: cell(idx.end),
+            status,
+            row: i + 1, // 1-based CSV row, counting the header
           });
         }
         if (!out.length)
           return {
-            err: "No usable rows found. Expecting: Name, Role, Reports To.",
+            err: "No usable rows found. Expecting: Lane, Item, Start, End, Status.",
           };
-        /* duplicate detection — the import status is this feature's documentation */
-        let dupName = null,
-          dupIds = 0;
-        if (idMode) {
-          const seen = new Set();
-          out.forEach((p) => {
-            const k = norm(p.id);
-            if (!k) return;
-            if (seen.has(k)) dupIds++;
-            else seen.add(k);
-          });
-        } else {
-          const counts = new Map();
-          out.forEach((p) => {
-            const k = norm(p.name);
-            counts.set(k, (counts.get(k) || 0) + 1);
-          });
-          const dups = [...counts.entries()].filter(([, c]) => c > 1);
-          if (dups.length) {
-            const first = out.find((p) => norm(p.name) === dups[0][0]);
-            dupName = {
-              name: first.name,
-              count: dups[0][1],
-              extra: dups.length - 1,
-            };
-          }
-        }
-        return { people: out, skipped, badColors, dupName, dupIds, idMode };
+        return { items: out, badStatus };
       }
 
-      /* ================= tree ================= */
-      function buildForest(list) {
-        const nodes = list.map((p, i) => ({
-          ...p,
-          key: i,
-          src: p,
-          children: [],
-          parent: null,
-        }));
-        const byName = new Map(),
-          byId = new Map();
-        nodes.forEach((n) => {
-          const k = norm(n.name);
-          if (k && !byName.has(k)) byName.set(k, n);
-          const ik = norm(n.id);
-          if (ik && !byId.has(ik)) byId.set(ik, n);
-        });
-        const roots = [];
-        let orphans = 0;
-        nodes.forEach((n) => {
-          /* an ID link, when present, wins outright — no falling back to names */
-          const ik = norm(n.managerId);
-          const mk = norm(n.manager);
-          const par = ik ? byId.get(ik) : mk ? byName.get(mk) : null;
-          if (par && par !== n) {
-            n.parent = par;
-            par.children.push(n);
-          } else {
-            if ((ik || mk) && !par) orphans++;
-            roots.push(n);
-          }
-        });
-        // break cycles: anything unreachable from roots gets promoted
-        const seen = new Set();
-        const walk = (n) => {
-          if (seen.has(n.key)) return;
-          seen.add(n.key);
-          n.children.forEach(walk);
-        };
-        roots.forEach(walk);
-        nodes.forEach((n) => {
-          if (!seen.has(n.key)) {
-            if (n.parent)
-              n.parent.children = n.parent.children.filter((c) => c !== n);
-            n.parent = null;
-            roots.push(n);
-            walk(n);
-          }
-        });
-        return { roots, orphans, total: nodes.length, nodes };
+      /* ================= dates ================= */
+      const DAY = 86400000;
+      const MONTHS_IN = {
+        jan: 0,
+        feb: 1,
+        mar: 2,
+        apr: 3,
+        may: 4,
+        jun: 5,
+        jul: 6,
+        aug: 7,
+        sep: 8,
+        oct: 9,
+        nov: 10,
+        dec: 11,
+      };
+      const MON = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+      /* every date is a UTC-noon Date so DST shifts can never move a bar */
+      function mkDate(y, m, d) {
+        const dt = new Date(Date.UTC(y, m, d, 12));
+        return dt.getUTCFullYear() === y &&
+          dt.getUTCMonth() === m &&
+          dt.getUTCDate() === d
+          ? dt
+          : null;
       }
-      function subSize(n) {
-        return 1 + n.children.reduce((a, c) => a + subSize(c), 0);
+      function daysInMonth(y, m) {
+        return new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
       }
-
-      /* ================= scope (drill-down) ================= */
-      function ancestorChain(n) {
-        const chain = [],
-          seen = new Set();
-        while (n && !seen.has(n)) {
-          seen.add(n);
-          chain.unshift(n);
-          n = n.parent;
+      /* UK-first: dd/mm/yyyy, ISO yyyy-mm-dd, "Mar 2026", "Q1 2026".
+   An ambiguous day/month always resolves dd/mm, never mm/dd. A month or
+   quarter means its first day in a Start and its last day in an End.
+   Anything else returns null — the caller warns, never guesses. */
+      function parseDate(raw, isEnd) {
+        const s = (raw || "").trim();
+        if (!s) return null;
+        let m;
+        if ((m = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/)))
+          return mkDate(+m[1], +m[2] - 1, +m[3]);
+        if ((m = s.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})$/)))
+          return mkDate(+m[3], +m[2] - 1, +m[1]);
+        if ((m = s.match(/^q([1-4])\s*(\d{4})$/i))) {
+          const mo = (+m[1] - 1) * 3 + (isEnd ? 2 : 0),
+            y = +m[2];
+          return mkDate(y, mo, isEnd ? daysInMonth(y, mo) : 1);
         }
-        return chain;
-      }
-      /* Re-find the scoped person in a fresh forest. Tracks the person OBJECT, so
-   renames follow them; if they're gone, fall back to the nearest surviving
-   ancestor on the old path; if none survive, back to the whole org. */
-      function resolveScope(forest) {
-        for (let i = scopePath.length - 1; i >= 0; i--) {
-          const hit = forest.nodes.find((n) => n.src === scopePath[i]);
-          if (hit) {
-            let chain = ancestorChain(hit);
-            // a single root IS the whole org, so it never appears in the path
-            if (forest.roots.length === 1 && chain[0] === forest.roots[0])
-              chain = chain.slice(1);
-            scopePath = chain.map((n) => n.src);
-            return chain.length ? hit : null;
-          }
+        if ((m = s.match(/^([a-z]{3,9})\s+(\d{4})$/i))) {
+          const k = m[1].slice(0, 3).toLowerCase();
+          if (!(k in MONTHS_IN)) return null;
+          const y = +m[2],
+            mo = MONTHS_IN[k];
+          return mkDate(y, mo, isEnd ? daysInMonth(y, mo) : 1);
         }
-        scopePath = [];
         return null;
       }
-      function effectiveTitle(scope) {
-        const base = settings.title.trim();
-        const who = scope ? (scope.name || "").trim() : "";
-        if (!who) return base;
-        return base ? base + " — " + who : who;
+      const dayOf = (d) => Math.floor(+d / DAY); // UTC-noon → whole days since epoch
+      const fmtMonth = (d) => MON[d.getUTCMonth()] + " " + d.getUTCFullYear();
+
+      /* ================= plan model ================= */
+      /* Groups raw items into lanes (first-appearance order), parses dates and
+   splits bars from milestones. Every unusable row produces a plain warning
+   naming the row — nothing is ever silently guessed or dropped. */
+      function buildModel(list) {
+        const lanes = [],
+          byLane = new Map(),
+          warnings = [];
+        let plotted = 0;
+        const where = (it) =>
+          (it.row ? `Row ${it.row} — ` : "") +
+          `"${(it.item || "").trim() || "(unnamed)"}"` +
+          ((it.lane || "").trim() ? ` in ${it.lane.trim()}` : "");
+        list.forEach((it) => {
+          const laneName = (it.lane || "").trim();
+          const itemName = (it.item || "").trim();
+          const startRaw = (it.start || "").trim();
+          const endRaw = (it.end || "").trim();
+          // a hand-added card (row 0) stays quiet until its item or dates are
+          // typed; CSV rows always warn, however empty
+          if (!it.row && !itemName && !startRaw && !endRaw) return;
+          if (!laneName && !itemName && !startRaw && !endRaw) return; // blank line
+          if (!laneName || !itemName || !startRaw) {
+            warnings.push(
+              `${where(it)}: needs a Lane, an Item and a Start — left off the slide.`,
+            );
+            return;
+          }
+          const start = parseDate(startRaw, false);
+          if (!start) {
+            warnings.push(
+              `${where(it)}: couldn't read Start "${startRaw}" — left off the slide. Try 01/03/2026, 2026-03-01, Mar 2026 or Q1 2026.`,
+            );
+            return;
+          }
+          let end = null;
+          if (endRaw && endRaw !== startRaw) {
+            end = parseDate(endRaw, true);
+            if (!end) {
+              warnings.push(
+                `${where(it)}: couldn't read End "${endRaw}" — left off the slide. Try 01/03/2026, 2026-03-01, Mar 2026 or Q1 2026.`,
+              );
+              return;
+            }
+            if (end < start) {
+              warnings.push(
+                `${where(it)}: ends (${endRaw}) before it starts (${startRaw}) — left off the slide.`,
+              );
+              return;
+            }
+          }
+          let lane = byLane.get(norm(laneName));
+          if (!lane) {
+            lane = { name: laneName, bars: [], miles: [] };
+            byLane.set(norm(laneName), lane);
+            lanes.push(lane);
+          }
+          const entry = { name: itemName, start, status: it.status || "" };
+          if (!end || +end === +start) lane.miles.push(entry);
+          else lane.bars.push({ ...entry, end });
+          plotted++;
+        });
+        return { lanes, warnings, plotted };
       }
 
       /* ================= layout + svg ================= */
-      const G = {
-        root: { w: 216, h: 62 },
-        tier: { w: 184, h: 58 },
-        list: { w: 172, h: 43 },
-        listGap: 7,
-        indent: 17,
-        colGap: 26,
-        tierGap: 50,
-        listTop: 25,
-        ghostH: 36,
+      const L = {
+        plotW: 1000, // time-axis width in content units
+        gutter: 148, // lane-name gutter, left of the plot
+        rowH: 26, // one bar sub-row
+        barH: 18,
+        msH: 22, // one milestone row, on the lane baseline
+        foldH: 24, // the "+ n more items" strip
+        padY: 8, // lane band breathing room, top and bottom
       };
-      /* only cards WITH a detail line grow; everything else keeps its exact height */
-      const DETAIL_H = { root: 16, tier: 14, list: 13 };
-      function cardH(node, kind) {
-        const base =
-          kind === "root" ? G.root.h : kind === "tier" ? G.tier.h : G.list.h;
-        return base + ((node.detail || "").trim() ? DETAIL_H[kind] : 0);
+
+      /* ---- time axis: weeks / months / quarters, snapped to unit boundaries ---- */
+      function floorUnit(d, unit) {
+        if (unit === "weeks") return new Date(+d - ((d.getUTCDay() + 6) % 7) * DAY); // Monday
+        const y = d.getUTCFullYear(),
+          m = d.getUTCMonth();
+        return unit === "months" ? mkDate(y, m, 1) : mkDate(y, m - (m % 3), 1);
+      }
+      function nextUnit(d, unit) {
+        if (unit === "weeks") return new Date(+d + 7 * DAY);
+        const m =
+          d.getUTCMonth() + (unit === "months" ? 1 : 3 - (d.getUTCMonth() % 3));
+        return mkDate(d.getUTCFullYear() + Math.floor(m / 12), m % 12, 1);
+      }
+      /* units auto-select so gridlines and labels stay clean at any range:
+   up to ~16 weeks → weeks; up to ~21 months → months; beyond → quarters */
+      function buildAxis(min, max) {
+        const span = (+max - +min) / DAY;
+        const unit = span <= 115 ? "weeks" : span <= 640 ? "months" : "quarters";
+        const d0 = floorUnit(min, unit);
+        const d1 = nextUnit(floorUnit(max, unit), unit);
+        const cells = [];
+        for (let t = d0; +t < +d1; t = nextUnit(t, unit)) cells.push(t);
+        return { unit, d0, d1, cells };
+      }
+      function cellLabel(d, unit, withYear) {
+        const y = d.getUTCFullYear(),
+          m = d.getUTCMonth();
+        if (unit === "weeks")
+          return d.getUTCDate() + " " + MON[m] + (withYear ? " " + y : "");
+        if (unit === "months") return MON[m] + (withYear ? " " + y : "");
+        return "Q" + (m / 3 + 1) + (withYear ? " " + y : "");
       }
 
+      /* greedy sub-row stacking; list must arrive sorted by x1 */
+      function stackRows(list) {
+        const rows = [];
+        list.forEach((e) => {
+          let row = rows.find((r) =>
+            r.every((o) => e.x1 >= o.x2 + 3 || e.x2 <= o.x1 - 3),
+          );
+          if (!row) {
+            row = [];
+            rows.push(row);
+          }
+          row.push(e);
+        });
+        return rows;
+      }
+      const byX = (a, b) => a.x1 - b.x1 || a.x2 - b.x2;
+
+      let plottedCount = 0; // gates the export buttons
       function renderChart() {
         scheduleSave(); // every state change funnels through here
         const slide = $("#slide");
         const ph = $("#placeholder");
         slide.querySelectorAll("svg").forEach((s) => s.remove());
 
-        $("#peopleCount").textContent = people.length
-          ? "· " + people.length
-          : "";
-        if (!people.length) {
-          scopePath = [];
-          currentScope = null;
-          renderCrumbs();
+        $("#itemCount").textContent = items.length ? "· " + items.length : "";
+        refreshLaneOptions();
+        const model = buildModel(items);
+        showWarnings(model.warnings);
+        plottedCount = model.plotted;
+        if (!model.plotted) {
           updateExportUI();
           ph.style.display = "flex";
           $("#stageCount").textContent = "";
@@ -1699,262 +1650,290 @@ Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
           return;
         }
         ph.style.display = "none";
-
-        const forest = buildForest(people);
-        currentScope = resolveScope(forest);
-        renderCrumbs();
-
-        slide.style.setProperty(
-          "--chart-accent",
-          THEMES[settings.theme].accent,
-        );
         slide.classList.toggle("transparent", settings.transparent);
 
-        const r = composeSVG(forest, currentScope, true);
+        const r = composeSVG(model);
         slide.insertAdjacentHTML("beforeend", r.svg);
-        const who = currentScope
-          ? `${(currentScope.name || "Selected team").trim()} · `
-          : "";
         $("#stageCount").textContent =
-          `${who}${r.total} ${r.total === 1 ? "person" : "people"} · ${r.cols} ${r.single ? "direct report" : "top-level"} column${r.cols === 1 ? "" : "s"}`;
+          `${model.plotted} item${model.plotted === 1 ? "" : "s"} · ${model.lanes.length} lane${model.lanes.length === 1 ? "" : "s"} · ${r.range}`;
         updateExportUI();
       }
-
-      function drillTo(key) {
-        const node = navNodes.get(key);
-        if (!node || !node.children.length) return;
-        scopePath = ancestorChain(node).map((n) => n.src);
-        renderChart();
+      /* unusable-row warnings track the CURRENT data, import or hand-edits alike */
+      function showWarnings(list) {
+        const el = $("#dataWarn");
+        el.className = list.length ? "status show warn" : "status";
+        el.textContent = list.join(" ");
       }
-      function goUp() {
-        if (!scopePath.length) return;
-        scopePath = scopePath.slice(0, -1);
-        renderChart();
-      }
-      function renderCrumbs() {
-        const box = $("#crumbs");
-        box.innerHTML = "";
-        const add = (label, current, fn) => {
-          if (current) {
-            const s = document.createElement("span");
-            s.className = "crumb-cur";
-            s.textContent = label;
-            box.appendChild(s);
-          } else {
-            const b = document.createElement("button");
-            b.type = "button";
-            b.className = "crumb";
-            b.textContent = label;
-            b.addEventListener("click", fn);
-            box.appendChild(b);
-          }
-        };
-        add("Whole org", !scopePath.length, () => {
-          scopePath = [];
-          renderChart();
+      function refreshLaneOptions() {
+        const dl = $("#laneList");
+        dl.innerHTML = "";
+        const seen = new Set();
+        items.forEach((p) => {
+          const k = norm(p.lane);
+          if (!k || seen.has(k)) return;
+          seen.add(k);
+          const o = document.createElement("option");
+          o.value = p.lane.trim();
+          dl.appendChild(o);
         });
-        scopePath.forEach((p, i) => {
-          const sep = document.createElement("span");
-          sep.className = "crumb-sep";
-          sep.textContent = "/";
-          box.appendChild(sep);
-          add(
-            (p.name || "").trim() || "(unnamed)",
-            i === scopePath.length - 1,
-            () => {
-              scopePath = scopePath.slice(0, i + 1);
-              renderChart();
-            },
+      }
+
+      /* Pure chart composer. Two coordinate spaces, per CLAUDE.md: chart
+   content (lane bands, gridlines, bars, milestones) lives in content units;
+   the frame (title, footer, axis labels, today tab) is drawn after the 16:9
+   fit and sized by the FRAME, so it sits identically whatever the plan.
+   Fitting may only ever scale content DOWN — a small plan renders at natural
+   size, centred — and exports reuse this output verbatim, so they carry zero
+   UI chrome. */
+      function composeSVG(model) {
+        const T = THEMES[settings.theme];
+        let minT = Infinity,
+          maxT = -Infinity;
+        model.lanes.forEach((lane) => {
+          lane.bars.forEach((b) => {
+            minT = Math.min(minT, +b.start);
+            maxT = Math.max(maxT, +b.end);
+          });
+          lane.miles.forEach((m) => {
+            minT = Math.min(minT, +m.start);
+            maxT = Math.max(maxT, +m.start);
+          });
+        });
+        const axis = buildAxis(new Date(minT), new Date(maxT));
+        const day0 = dayOf(axis.d0),
+          day1 = dayOf(axis.d1);
+        const x = (dn) => ((dn - day0) / (day1 - day0)) * L.plotW;
+
+        /* ---- lane layout: stack overlapping items into sub-rows, then fold ---- */
+        const laid = [];
+        let contentH = 0;
+        model.lanes.forEach((lane, li) => {
+          const bars = lane.bars
+            .map((b) => {
+              const x1 = x(dayOf(b.start)),
+                x2 = x(dayOf(b.end) + 1); // end dates are inclusive
+              return { ...b, x1, x2: Math.max(x2, x1 + 4) };
+            })
+            .sort(byX);
+          let rows = stackRows(bars),
+            hidden = [];
+          if (rows.length > settings.maxRows) {
+            /* fold: the longest-running items keep their rows, the rest
+               collapse into the "+ n more items" strip */
+            const keep = [];
+            [...bars]
+              .sort((a, b) => b.x2 - b.x1 - (a.x2 - a.x1))
+              .forEach((b) => {
+                if (
+                  stackRows([...keep, b].sort(byX)).length <=
+                  settings.maxRows - 1
+                )
+                  keep.push(b);
+                else hidden.push(b);
+              });
+            rows = stackRows(keep.sort(byX));
+          }
+          /* milestones: label-aware extents, so same-date clusters stack into
+             extra baseline rows instead of overlapping */
+          const miles = lane.miles
+            .map((m) => {
+              const cx = x(dayOf(m.start) + 0.5);
+              measureCtx.font = "600 9.5px " + FONT;
+              const tw = Math.min(measureCtx.measureText(m.name).width, 150);
+              const flip = cx + 11 + tw > L.plotW + 20; // label flips left at the right edge
+              return flip
+                ? { ...m, cx, tw, flip, x1: cx - 11 - tw, x2: cx + 8 }
+                : { ...m, cx, tw, flip, x1: cx - 8, x2: cx + 11 + tw };
+            })
+            .sort(byX);
+          const msRows = stackRows(miles);
+          const h = Math.max(
+            34,
+            L.padY * 2 +
+              rows.length * L.rowH +
+              (hidden.length ? L.foldH : 0) +
+              msRows.length * L.msH,
+          );
+          laid.push({
+            lane,
+            rows,
+            hidden,
+            msRows,
+            y: contentH,
+            h,
+            zebra: li % 2 === 0,
+          });
+          contentH += h;
+        });
+
+        const seg = (c, x1, y1, x2, y2, w, op) =>
+          `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} L${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="${c}" stroke-width="${w || 1}"${op ? ` opacity="${op}"` : ""} fill="none"/>`;
+        const cp = [];
+
+        /* lane bands first (alternating tint — never white, so transparent
+           exports stay legible on light decks), then gridlines and rails */
+        laid.forEach((La) => {
+          if (La.zebra)
+            cp.push(
+              `<rect x="${-L.gutter}" y="${La.y.toFixed(1)}" width="${L.gutter + L.plotW}" height="${La.h.toFixed(1)}" fill="${T.tint}" opacity="0.55"/>`,
+            );
+        });
+        axis.cells.forEach((c, i) => {
+          if (i)
+            cp.push(seg(T.line, x(dayOf(c)), 0, x(dayOf(c)), contentH, 1, 0.6));
+        });
+        cp.push(seg(T.line, 0, 0, 0, contentH, 1));
+        cp.push(seg(T.line, L.plotW, 0, L.plotW, contentH, 1));
+        cp.push(seg(T.border, -L.gutter, 0, L.plotW, 0, 1.2));
+        laid.forEach((La) =>
+          cp.push(
+            seg(T.border, -L.gutter, La.y + La.h, L.plotW, La.y + La.h, 1.2),
+          ),
+        );
+
+        laid.forEach((La) => {
+          const topY = La.y + L.padY;
+          La.rows.forEach((row, ri) => {
+            row.forEach((b, bi) => {
+              const by = topY + ri * L.rowH + (L.rowH - L.barH) / 2;
+              const st = statusFill(T, b.status);
+              cp.push(
+                `<rect x="${b.x1.toFixed(1)}" y="${by.toFixed(1)}" width="${(b.x2 - b.x1).toFixed(1)}" height="${L.barH}" rx="4" fill="${st.bg}"/>`,
+              );
+              /* label inside the bar when it fits, otherwise beside it,
+                 truncated to the room before the next bar in the row */
+              const fs = 10.5;
+              measureCtx.font = "600 " + fs + "px " + FONT;
+              const tw = measureCtx.measureText(b.name).width;
+              const inner = b.x2 - b.x1 - 12;
+              const ty = by + L.barH / 2 + 3.5;
+              if (tw <= inner)
+                cp.push(
+                  `<text x="${(b.x1 + 6).toFixed(1)}" y="${ty.toFixed(1)}" font-size="${fs}" font-weight="600" fill="${st.fg}">${esc(b.name)}</text>`,
+                );
+              else {
+                const next = row[bi + 1];
+                const avail = (next ? next.x1 - 5 : L.plotW + 26) - (b.x2 + 5);
+                if (avail >= 34)
+                  cp.push(
+                    `<text x="${(b.x2 + 5).toFixed(1)}" y="${ty.toFixed(1)}" font-size="${fs}" font-weight="600" fill="${T.ink}">${esc(truncate(b.name, fs, avail, 600))}</text>`,
+                  );
+                else
+                  cp.push(
+                    `<text x="${(b.x1 + 6).toFixed(1)}" y="${ty.toFixed(1)}" font-size="${fs}" font-weight="600" fill="${st.fg}">${esc(truncate(b.name, fs, Math.max(inner, 14), 600))}</text>`,
+                  );
+              }
+            });
+          });
+          if (La.hidden.length) {
+            const fy = topY + La.rows.length * L.rowH + 1;
+            let fx1 = Math.min(...La.hidden.map((b) => b.x1)),
+              fx2 = Math.max(...La.hidden.map((b) => b.x2));
+            if (fx2 - fx1 < 110) {
+              const c = (fx1 + fx2) / 2;
+              fx1 = Math.max(0, Math.min(c - 55, L.plotW - 110));
+              fx2 = fx1 + 110;
+            }
+            cp.push(
+              `<rect x="${fx1.toFixed(1)}" y="${fy.toFixed(1)}" width="${(fx2 - fx1).toFixed(1)}" height="${L.foldH - 6}" rx="5" fill="none" stroke="${T.line}" stroke-dasharray="4 3"/>`,
+            );
+            cp.push(
+              `<text x="${((fx1 + fx2) / 2).toFixed(1)}" y="${(fy + (L.foldH - 6) / 2 + 3.5).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="600" fill="${T.sub}">+ ${La.hidden.length} more item${La.hidden.length === 1 ? "" : "s"}</text>`,
+            );
+          }
+          const msTop =
+            topY + La.rows.length * L.rowH + (La.hidden.length ? L.foldH : 0);
+          La.msRows.forEach((row, ri) => {
+            row.forEach((m) => {
+              const cy = msTop + ri * L.msH + L.msH / 2;
+              const fill = (STATUS[m.status] || {}).bg || T.accentDeep;
+              cp.push(
+                `<path d="M${m.cx.toFixed(1)} ${(cy - 6).toFixed(1)} L${(m.cx + 6).toFixed(1)} ${cy.toFixed(1)} L${m.cx.toFixed(1)} ${(cy + 6).toFixed(1)} L${(m.cx - 6).toFixed(1)} ${cy.toFixed(1)} Z" fill="${fill}"/>`,
+              );
+              cp.push(
+                `<text x="${(m.flip ? m.cx - 10 : m.cx + 10).toFixed(1)}" y="${(cy + 3.5).toFixed(1)}"${m.flip ? ' text-anchor="end"' : ""} font-size="9.5" font-weight="600" fill="${T.ink}">${esc(truncate(m.name, 9.5, 150, 600))}</text>`,
+              );
+            });
+          });
+          cp.push(
+            `<text x="${-L.gutter + 12}" y="${(La.y + La.h / 2 + 4.5).toFixed(1)}" font-size="12.5" font-weight="700" fill="${T.ink}">${esc(truncate(La.lane.name, 12.5, L.gutter - 26, 700))}</text>`,
           );
         });
-        if (scopePath.length) {
-          const back = document.createElement("button");
-          back.type = "button";
-          back.className = "btn btn-line crumb-back";
-          back.textContent = "← Back";
-          back.title = "Up one level (Esc)";
-          back.addEventListener("click", goUp);
-          box.appendChild(back);
+
+        /* today line — over the bars; its tab joins it in the frame pass.
+           Out of the axis range = quietly absent, never an error. */
+        let todayX = null;
+        if (settings.today) {
+          const now = new Date();
+          const tdn = dayOf(
+            new Date(
+              Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 12),
+            ),
+          );
+          if (tdn >= day0 && tdn < day1) todayX = x(tdn + 0.5);
         }
-      }
 
-      /* Pure chart composer: same layout + folding whatever the scope.
-   nav=true adds drill-down affordances for the live view; exports use nav=false
-   (or strip the tagged elements), so output is always chart-only. */
-      function composeSVG(forest, scope, nav) {
-        if (nav) navNodes.clear();
-        const T = THEMES[settings.theme];
-        const top =
-          scope || (forest.roots.length === 1 ? forest.roots[0] : null);
-        const tierNodes = top ? top.children : forest.roots;
-        const total = scope ? subSize(scope) : forest.total;
+        const parts = [cp.join("")];
 
-        const parts = [];
-
-        /* per-branch sizing + folding (unchanged), then wrap wide tiers into rows */
-        const branches = tierNodes.map((t) => {
-          let vis = t.children,
-            hidden = [];
-          if (t.children.length > settings.maxVis) {
-            vis = t.children.slice(0, settings.maxVis - 1);
-            hidden = t.children.slice(settings.maxVis - 1);
-          }
-          const hiddenCount = hidden.reduce((a, c) => a + subSize(c), 0);
-          const nRows = vis.length + (hiddenCount ? 1 : 0);
-          const w = Math.max(G.tier.w, G.indent + G.list.w);
-          const tierH = cardH(t, "tier");
-          const visHs = vis.map((v) => cardH(v, "list"));
-          const h =
-            tierH +
-            (nRows
-              ? G.listTop +
-                visHs.reduce((a, c) => a + c, 0) +
-                (nRows - 1) * G.listGap +
-                (hiddenCount ? G.ghostH : 0)
-              : 0);
-          return { node: t, vis, visHs, tierH, hiddenCount, w, h };
-        });
-        const MAXC = 6;
-        const rows = [];
-        if (branches.length) {
-          const nRows = Math.ceil(branches.length / MAXC);
-          const base = Math.floor(branches.length / nRows),
-            extra = branches.length % nRows;
-          for (let i = 0, r = 0; r < nRows; r++) {
-            const take = base + (r < extra ? 1 : 0);
-            rows.push(branches.slice(i, i + take));
-            i += take;
-          }
-        }
-        const rowW = (row) =>
-          row.reduce((a, b) => a + b.w, 0) + (row.length - 1) * G.colGap;
-        const totalW = rows.length ? Math.max(...rows.map(rowW)) : G.root.w;
-
-        /* chart body in pure content coordinates; title & footer are frame chrome, drawn after the fit */
-        const title = effectiveTitle(scope);
-        const cp = [];
-        const gutterX = -18; // spine feeding wrapped rows, left of all cards
-        const useGutter = !!top && rows.length > 1;
-        let rowTop = 0,
-          maxBottom = 0,
-          firstBusY = 0,
-          lastBusY = 0;
-        const rootH = top ? cardH(top, "root") : 0;
-        if (top) {
-          const rx = (totalW - G.root.w) / 2;
-          drawCard(cp, T, rx, 0, G.root.w, rootH, top, "root", nav);
-          rowTop = rootH + G.tierGap;
-          maxBottom = rootH;
-        }
-        rows.forEach((row, ri) => {
-          let acc = (totalW - rowW(row)) / 2;
-          const centers = row.map((b) => {
-            const c = acc + b.w / 2;
-            acc += b.w + G.colGap;
-            return c;
-          });
-          if (top) {
-            const busY = rowTop - G.tierGap / 2;
-            if (ri === 0) {
-              const rcx = totalW / 2;
-              cp.push(line(T, rcx, rootH, rcx, busY));
-              cp.push(
-                line(
-                  T,
-                  useGutter ? gutterX : Math.min(centers[0], rcx),
-                  busY,
-                  Math.max(centers[centers.length - 1], rcx),
-                  busY,
-                ),
-              );
-              firstBusY = busY;
-            } else {
-              cp.push(
-                line(T, gutterX, busY, centers[centers.length - 1], busY),
-              );
-              lastBusY = busY;
-            }
-            centers.forEach((c) => cp.push(line(T, c, busY, c, rowTop)));
-          }
-          let rowH = 0;
-          row.forEach((b, ci) => {
-            // structural marker: the deck export groups each branch by this tag
-            cp.push(`<g data-branch="${esc(b.node.name || "team")}">`);
-            const cardX = centers[ci] - G.tier.w / 2;
-            drawCard(
-              cp,
-              T,
-              cardX,
-              rowTop,
-              G.tier.w,
-              b.tierH,
-              b.node,
-              "tier",
-              nav,
-            );
-            let y = rowTop + b.tierH + G.listTop;
-            const spineX = cardX + 11;
-            let spineEnd = rowTop + b.tierH;
-            b.vis.forEach((v, vi) => {
-              const lh = b.visHs[vi];
-              const lx = cardX + G.indent;
-              const cy = y + lh / 2;
-              cp.push(line(T, spineX, cy, lx, cy));
-              spineEnd = cy;
-              drawCard(cp, T, lx, y, G.list.w, lh, v, "list", nav);
-              y += lh + G.listGap;
-            });
-            if (b.hiddenCount) {
-              const lx = cardX + G.indent;
-              const cy = y + G.ghostH / 2;
-              cp.push(line(T, spineX, cy, lx, cy));
-              spineEnd = cy;
-              if (nav) {
-                navNodes.set(b.node.key, b.node);
-                cp.push(
-                  `<g data-ghost="1" data-drill="${b.node.key}" tabindex="0" role="button" aria-label="View all of ${esc(b.node.name || "this manager")}'s team">`,
-                );
-              }
-              cp.push(
-                `<rect x="${lx}" y="${y}" width="${G.list.w}" height="${G.ghostH}" rx="7" fill="none" stroke="${T.line}" stroke-dasharray="4 3"${nav ? ' pointer-events="all"' : ""}/>`,
-              );
-              cp.push(
-                `<text x="${lx + G.list.w / 2}" y="${y + G.ghostH / 2 + 4}" text-anchor="middle" font-family="${FONT}" font-size="11.5" font-weight="600" fill="${T.sub}">+ ${b.hiddenCount} more role${b.hiddenCount === 1 ? "" : "s"}</text>`,
-              );
-              if (nav) cp.push("</g>");
-              y += G.ghostH + G.listGap;
-            }
-            if (b.vis.length || b.hiddenCount)
-              cp.push(line(T, spineX, rowTop + b.tierH, spineX, spineEnd));
-            cp.push("</g>");
-            rowH = Math.max(rowH, b.h);
-            maxBottom = Math.max(maxBottom, rowTop + b.h);
-          });
-          rowTop += rowH + G.tierGap;
-        });
-        if (useGutter) cp.push(line(T, gutterX, firstBusY, gutterX, lastBusY));
-        parts.push(cp.join(""));
-
-        /* 16:9 frame fit from CHART CONTENT ONLY, reserving a frame-proportional band up top
-     for the title. Fitting may only ever scale content DOWN, never up (MIN_VW = max zoom). */
-        const hasTitle = !!title && !settings.transparent;
-        const chartL = useGutter ? gutterX : 0;
-        const chartW = totalW - chartL;
+        /* 16:9 frame fit from CHART CONTENT ONLY, reserving frame-proportional
+     bands up top for the title and the axis labels. Fitting may only ever
+     scale content DOWN, never up. */
+        const title = settings.title.trim();
+        const hasTitle = !!title;
+        const chartL = -L.gutter;
+        const chartW = L.gutter + L.plotW;
         const pad = Math.max(40, chartW * 0.035);
-        const MIN_VW = 1150;
-        const bandF = hasTitle ? 0.14 : 0;
+        const bandF = hasTitle ? 0.13 : 0;
+        const axisF = 0.085;
         const vw = Math.max(
           chartW + pad * 2,
-          ((maxBottom + pad * 2) * (16 / 9)) / (1 - bandF),
-          MIN_VW,
+          ((contentH + pad * 2) * (16 / 9)) / (1 - bandF - axisF),
+          1150,
         );
         const vh = (vw * 9) / 16;
-        const bandH = vh * bandF;
-        const vx = (chartL + totalW) / 2 - vw / 2; // chart centred horizontally in the frame
-        const vy = maxBottom / 2 - bandH - (vh - bandH) / 2; // …and vertically in the area below the band
+        const reserve = vh * (bandF + axisF);
+        const vx = (chartL + L.plotW) / 2 - vw / 2;
+        const vy = contentH / 2 - reserve - (vh - reserve) / 2;
 
-        /* frame chrome — title top-left, footer bottom-right, sized by the FRAME so they are
-     visually identical in every view; never part of chart bounds or zoom */
+        /* frame chrome — axis labels, today tab, title top-left, footer
+     bottom-right, all sized by the FRAME so they are visually identical for
+     every plan; never part of chart bounds or zoom */
+        const axFs = vw * 0.0095;
+        const fits = (s, cw) => {
+          measureCtx.font = "600 " + axFs + "px " + FONT;
+          return measureCtx.measureText(s).width <= cw - 6;
+        };
+        axis.cells.forEach((c, i) => {
+          const cx1 = x(dayOf(c)),
+            cx2 = x(dayOf(nextUnit(c, axis.unit)));
+          const wantYear =
+            i === 0 || (axis.unit !== "weeks" && c.getUTCMonth() === 0);
+          let lab = cellLabel(c, axis.unit, wantYear);
+          if (!fits(lab, cx2 - cx1) && wantYear)
+            lab = lab.replace(/ \d\d(\d\d)$/, " ’$1"); // "Feb 2026" → "Feb ’26"
+          if (!fits(lab, cx2 - cx1)) lab = cellLabel(c, axis.unit, false);
+          if (!fits(lab, cx2 - cx1) && i % 2 === 1) lab = ""; // thin out, never collide
+          if (lab)
+            parts.push(
+              `<text x="${((cx1 + cx2) / 2).toFixed(1)}" y="${(-axFs * 0.7).toFixed(1)}" text-anchor="middle" font-family="${FONT}" font-size="${axFs.toFixed(1)}" font-weight="600" fill="${T.sub}">${esc(lab)}</text>`,
+            );
+        });
+        if (todayX !== null) {
+          const tabFs = vw * 0.0082;
+          measureCtx.font = "700 " + tabFs + "px " + FONT;
+          const tabW = measureCtx.measureText("today").width + tabFs * 1.4;
+          const tabH = tabFs * 1.75;
+          const tabY = -(axFs * 1.9 + tabH);
+          parts.push(
+            `<path d="M${todayX.toFixed(1)} ${(tabY + tabH).toFixed(1)} L${todayX.toFixed(1)} ${contentH}" stroke="${T.accent}" stroke-width="1.8" opacity="0.85" fill="none"/>`,
+          );
+          parts.push(
+            `<rect x="${(todayX - tabW / 2).toFixed(1)}" y="${tabY.toFixed(1)}" width="${tabW.toFixed(1)}" height="${tabH.toFixed(1)}" rx="${(tabH / 2).toFixed(1)}" fill="${T.accent}"/>`,
+          );
+          parts.push(
+            `<text x="${todayX.toFixed(1)}" y="${(tabY + tabH / 2 + tabFs * 0.36).toFixed(1)}" text-anchor="middle" font-family="${FONT}" font-size="${tabFs.toFixed(1)}" font-weight="700" fill="#FFFFFF">today</text>`,
+          );
+        }
         const mx = vw * 0.034;
         if (hasTitle) {
           const fs = vw * 0.0185;
@@ -1967,214 +1946,64 @@ Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
           );
         }
         parts.push(
-          `<text x="${(vx + vw - mx).toFixed(1)}" y="${(vy + vh - vw * 0.014).toFixed(1)}" text-anchor="end" font-family="${FONT}" font-size="${(vw * 0.0089).toFixed(1)}" fill="${T.sub}" opacity="0.85">${total} ${total === 1 ? "person" : "people"}</text>`,
+          `<text x="${(vx + vw - mx).toFixed(1)}" y="${(vy + vh - vw * 0.014).toFixed(1)}" text-anchor="end" font-family="${FONT}" font-size="${(vw * 0.0089).toFixed(1)}" fill="${T.sub}" opacity="0.85">${model.plotted} item${model.plotted === 1 ? "" : "s"}</text>`,
         );
 
         const bg = settings.transparent
           ? ""
           : `<rect x="${vx}" y="${vy}" width="${vw}" height="${vh}" fill="#FFFFFF"/>`;
         const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vx.toFixed(1)} ${vy.toFixed(1)} ${vw.toFixed(1)} ${vh.toFixed(1)}" font-family="${FONT}">${bg}${parts.join("")}</svg>`;
-        return { svg, total, cols: branches.length, single: !!top };
+        return {
+          svg,
+          range: fmtMonth(new Date(minT)) + " – " + fmtMonth(new Date(maxT)),
+        };
       }
 
-      function line(T, x1, y1, x2, y2) {
-        return `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} L${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="${T.line}" stroke-width="1.4" fill="none"/>`;
-      }
-
-      function drawCard(parts, T, x, y, w, h, node, kind, nav) {
-        const teamN = subSize(node) - 1;
-        /* hover/focus "View team →" pill — chrome only, never drawn for exports */
-        const drill = nav && kind !== "root" && node.children.length > 0;
-        if (drill) {
-          navNodes.set(node.key, node);
-          parts.push(`<g class="crew">`);
-        }
-        const det = (node.detail || "").trim();
-        if (kind === "root") {
-          parts.push(
-            `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="9" fill="${T.accentDeep}"/>`,
-          );
-          parts.push(
-            `<text x="${x + w / 2}" y="${y + 26}" text-anchor="middle" font-size="14.5" font-weight="700" fill="#FFFFFF">${esc(truncate(node.name, 14.5, w - 24))}</text>`,
-          );
-          parts.push(
-            `<text x="${x + w / 2}" y="${y + 44}" text-anchor="middle" font-size="11" fill="#FFFFFF" opacity="0.78">${esc(truncate(node.role || "", 11, w - 24))}</text>`,
-          );
-          if (det)
-            parts.push(
-              `<text x="${x + w / 2}" y="${y + 59}" text-anchor="middle" font-size="10" fill="#FFFFFF" opacity="0.58">${esc(truncate(det, 10, w - 24))}</text>`,
-            );
-        } else if (kind === "tier") {
-          parts.push(
-            `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="#FFFFFF" stroke="${T.border}"/>`,
-          );
-          parts.push(
-            `<path d="M${x + 8} ${y + 1.5} H${x + w - 8}" stroke="${T.accent}" stroke-width="3" stroke-linecap="round"/>`,
-          );
-          parts.push(
-            `<text x="${x + 13}" y="${y + 25}" font-size="13" font-weight="700" fill="${T.ink}">${esc(truncate(node.name, 13, w - 26))}</text>`,
-          );
-          parts.push(
-            `<text x="${x + 13}" y="${y + 42}" font-size="10.5" fill="${T.sub}">${esc(truncate(node.role || "", 10.5, w - 26))}</text>`,
-          );
-          if (det)
-            parts.push(
-              `<text x="${x + 13}" y="${y + 56}" font-size="9.5" fill="${T.sub}" opacity="0.8">${esc(truncate(det, 9.5, w - 26))}</text>`,
-            );
-        } else {
-          parts.push(
-            `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" fill="${T.listFill}" stroke="${T.border}"/>`,
-          );
-          let textW = w - 22;
-          if (settings.counts && teamN > 0) {
-            const chipTxt = "+" + teamN;
-            measureCtx.font = "10px " + FONT;
-            const cw = Math.max(24, measureCtx.measureText(chipTxt).width + 12);
-            parts.push(
-              `<rect x="${x + w - cw - 8}" y="${y + h / 2 - 9}" width="${cw}" height="18" rx="9" fill="${T.tint}"/>`,
-            );
-            parts.push(
-              `<text x="${x + w - 8 - cw / 2}" y="${y + h / 2 + 3.5}" text-anchor="middle" font-size="10" font-weight="700" fill="${T.accent}">${chipTxt}</text>`,
-            );
-            textW -= cw + 6;
-          }
-          parts.push(
-            `<text x="${x + 11}" y="${y + 18}" font-size="11.5" font-weight="600" fill="${T.ink}">${esc(truncate(node.name, 11.5, textW))}</text>`,
-          );
-          parts.push(
-            `<text x="${x + 11}" y="${y + 33}" font-size="10" fill="${T.sub}">${esc(truncate(node.role || "", 10, textW))}</text>`,
-          );
-          if (det)
-            parts.push(
-              `<text x="${x + 11}" y="${y + 46}" font-size="9" fill="${T.sub}" opacity="0.8">${esc(truncate(det, 9, textW))}</text>`,
-            );
-        }
-        /* tag chip — overlaps the card's top edge (tier: on the accent bar), right-aligned;
-     ghosts never get here, and the white keyline keeps it legible on any theme */
-        const tag = (node.tag || "").trim();
-        if (tag) {
-          const tc = TAGC[node.tagColor] || TAGC.grey;
-          const small = kind === "list";
-          const tfs = small ? 8 : 9,
-            th = small ? 12 : 14;
-          const label = truncate(tag.toUpperCase(), tfs, small ? 52 : 62, 700);
-          measureCtx.font = "700 " + tfs + "px " + FONT;
-          const tw = Math.ceil(measureCtx.measureText(label).width) + 12;
-          const tcy = kind === "tier" ? y + 1.5 : y;
-          const tx = x + w - (kind === "root" ? 10 : 8) - tw;
-          parts.push(
-            `<rect x="${tx.toFixed(1)}" y="${(tcy - th / 2).toFixed(1)}" width="${tw}" height="${th}" rx="${th / 2}" fill="${tc.bg}" stroke="#FFFFFF" stroke-width="1.2"/>`,
-          );
-          parts.push(
-            `<text x="${(tx + tw / 2).toFixed(1)}" y="${(tcy + tfs * 0.36).toFixed(1)}" text-anchor="middle" font-size="${tfs}" font-weight="700" letter-spacing="0.5" fill="${tc.fg}">${esc(label)}</text>`,
-          );
-        }
-        if (drill) {
-          const lbl = "View team →";
-          measureCtx.font = "700 9.5px " + FONT;
-          const pw = Math.ceil(measureCtx.measureText(lbl).width) + 18,
-            phh = 19;
-          const px = x + w - pw - 6,
-            py = y + h / 2 - phh / 2;
-          parts.push(
-            `<g class="navpill" data-nav="1" data-drill="${node.key}" tabindex="0" role="button" aria-label="View ${esc(node.name || "this person")}'s team">` +
-              `<rect x="${px}" y="${py}" width="${pw}" height="${phh}" rx="${phh / 2}" fill="${T.accent}"/>` +
-              `<text x="${px + pw / 2}" y="${py + 13}" text-anchor="middle" font-family="${FONT}" font-size="9.5" font-weight="700" fill="#FFFFFF">${lbl}</text>` +
-              `</g></g>`,
-          );
-        }
-      }
-
-      /* ================= people editor ================= */
-      function renderPeopleList() {
-        const box = $("#peopleList");
+      /* ================= item editor ================= */
+      function renderItemList() {
+        const box = $("#itemList");
         box.innerHTML = "";
-        if (!people.length) {
-          box.innerHTML = `<div class="empty-note">No one here yet. Import a CSV above, load the sample, or add your first person.</div>`;
+        if (!items.length) {
+          box.innerHTML = `<div class="empty-note">Nothing here yet. Import a CSV above, load the sample, or add your first item.</div>`;
           return;
         }
-        people.forEach((p, i) => {
+        items.forEach((p, i) => {
           const card = document.createElement("div");
-          card.className = "person";
-          /* ID-matched imports may have no "Reports To" name at all — show the
-             manager the ID link actually resolves to */
-          const effMgr = (() => {
-            const ik = norm(p.managerId);
-            if (ik) {
-              const t = people.find((q) => norm(q.id) === ik);
-              if (t) return t.name;
-            }
-            return p.manager;
-          })();
-          /* filter by identity, not name, so duplicate names still appear */
-          let selDone = false;
-          const opts = people
-            .filter((q) => q !== p && (q.name || "").trim())
-            .map((q) => {
-              const sel = !selDone && norm(q.name) === norm(effMgr);
-              if (sel) selDone = true;
-              return `<option value="${esc(q.name)}"${sel ? " selected" : ""}>${esc(q.name)}</option>`;
-            })
-            .join("");
-          const dots = Object.keys(TAGC)
-            .map(
-              (c) =>
-                `<button type="button" class="tagdot" data-c="${c}" title="Tag colour: ${c}" aria-label="Tag colour: ${c}" aria-pressed="${(p.tagColor || "grey") === c}" style="background:${TAGC[c].bg}"></button>`,
-            )
-            .join("");
+          card.className = "item-card";
+          const dots = STATUS_KEYS.map(
+            (c) =>
+              `<button type="button" class="tagdot" data-c="${c}" title="Status: ${c}" aria-label="Status: ${c}" aria-pressed="${(p.status || "grey") === c}" style="background:${DOT[c]}"></button>`,
+          ).join("");
           card.innerHTML = `
       <div class="grid">
-        <input type="text" value="${esc(p.name)}" placeholder="Name" aria-label="Name" data-f="name">
-        <input type="text" value="${esc(p.role)}" placeholder="Role" aria-label="Role" data-f="role">
-        <select aria-label="Reports to" data-f="manager">
-          <option value="">— top level —</option>${opts}
-        </select>
-        <input type="text" class="full" value="${esc(p.detail || "")}" placeholder="Detail — e.g. location (optional)" aria-label="Detail" data-f="detail">
+        <input type="text" class="full" value="${esc(p.item)}" placeholder="Item" aria-label="Item" data-f="item">
+        <input type="text" class="full" value="${esc(p.lane)}" placeholder="Lane" aria-label="Lane" data-f="lane" list="laneList">
+        <input type="text" value="${esc(p.start)}" placeholder="Start — 01/03/2026" aria-label="Start" data-f="start">
+        <input type="text" value="${esc(p.end)}" placeholder="End — blank = milestone" aria-label="End" data-f="end">
         <div class="tagrow">
-          <input type="text" value="${esc(p.tag || "")}" placeholder="Tag (optional)" maxlength="20" aria-label="Tag" data-f="tag">
-          <div class="tagdots" aria-label="Tag colour">${dots}</div>
+          <span class="dotlbl">Status</span>
+          <div class="tagdots" aria-label="Status">${dots}</div>
         </div>
       </div>
-      <button class="del" title="Remove ${esc(p.name)}" aria-label="Remove ${esc(p.name)}">×</button>`;
+      <button class="del" title="Remove ${esc(p.item || "this item")}" aria-label="Remove ${esc(p.item || "this item")}">×</button>`;
           card.querySelectorAll("input").forEach((inp) => {
             inp.addEventListener("input", () => {
               p[inp.dataset.f] = inp.value;
               renderChart();
             });
-            if (inp.dataset.f === "name")
-              inp.addEventListener("change", renderPeopleList);
           });
           card.querySelectorAll(".tagdot").forEach((d) =>
             d.addEventListener("click", () => {
-              p.tagColor = d.dataset.c;
+              p.status = d.dataset.c === "grey" ? "" : d.dataset.c;
               card
                 .querySelectorAll(".tagdot")
                 .forEach((x) => x.setAttribute("aria-pressed", x === d));
               renderChart();
             }),
           );
-          card.querySelector("select").addEventListener("change", (e) => {
-            p.manager = e.target.value;
-            // keep ID links in step with the editor: point managerId at the
-            // chosen person's id (or clear it for "top level" / no-id people)
-            const t = people.find(
-              (q) => norm(q.name) === norm(e.target.value),
-            );
-            p.managerId = t ? t.id || "" : "";
-            renderChart();
-          });
           card.querySelector(".del").addEventListener("click", () => {
-            const oldName = norm(p.name),
-              oldId = norm(p.id);
-            people.splice(i, 1);
-            people.forEach((q) => {
-              if (oldId && norm(q.managerId) === oldId) {
-                q.managerId = p.managerId || "";
-                q.manager = p.manager || "";
-              } else if (!norm(q.managerId) && norm(q.manager) === oldName)
-                q.manager = p.manager || "";
-            });
-            renderPeopleList();
+            items.splice(i, 1);
+            renderItemList();
             renderChart();
           });
           box.appendChild(card);
@@ -2185,30 +2014,10 @@ Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
       function currentSVG() {
         return $("#slide svg");
       }
-      /* Exports must contain the chart only: drop the nav pills, strip the
-   interactivity attributes off ghost cards (their visuals are chart content). */
+      /* composeSVG output is already chart-only (no UI chrome ever enters the
+   SVG), so exporting is a straight serialisation of the live slide */
       function cleanSVGString(svgEl) {
-        const c = svgEl.cloneNode(true);
-        c.querySelectorAll("[data-nav]").forEach((el) => el.remove());
-        c.querySelectorAll("[data-drill]").forEach((el) => {
-          [
-            "data-drill",
-            "data-ghost",
-            "tabindex",
-            "role",
-            "aria-label",
-          ].forEach((a) => el.removeAttribute(a));
-        });
-        c.querySelectorAll("[pointer-events]").forEach((el) =>
-          el.removeAttribute("pointer-events"),
-        );
-        c.querySelectorAll("[class]").forEach((el) =>
-          el.removeAttribute("class"),
-        );
-        c.querySelectorAll("[data-branch]").forEach((el) =>
-          el.removeAttribute("data-branch"),
-        );
-        return c.outerHTML;
+        return svgEl.outerHTML;
       }
       function svgToPngBlob(svgStr) {
         return new Promise((resolve, reject) => {
@@ -2259,15 +2068,15 @@ Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
           .replace(/[^a-z0-9]+/g, "-")
           .replace(/^-|-$/g, "");
       }
-      function fileStem(scope) {
-        return slugify(effectiveTitle(scope)) || "orgami-chart";
+      function fileStem() {
+        return slugify(settings.title) || "timelane-plan";
       }
       /* ---- export actions; all are reached only via the header Export split button ---- */
       function exportCurrentPNG() {
         const svg = currentSVG();
         if (!svg) return;
         svgToPngBlob(cleanSVGString(svg)).then((b) =>
-          downloadBlob(b, fileStem(currentScope) + ".png"),
+          downloadBlob(b, fileStem() + ".png"),
         );
       }
       function exportCurrentSVG() {
@@ -2275,61 +2084,18 @@ Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
         if (!svg) return;
         downloadBlob(
           new Blob([cleanSVGString(svg)], { type: "image/svg+xml" }),
-          fileStem(currentScope) + ".svg",
+          fileStem() + ".svg",
         );
       }
-      async function exportAllTeams(progress) {
-        const forest = buildForest(people);
-        const mgrs = [];
-        const walk = (n) => {
-          if (n.children.length) mgrs.push(n);
-          n.children.forEach(walk);
-        };
-        forest.roots.forEach(walk);
-        const used = new Map();
-        for (let i = 0; i < mgrs.length; i++) {
-          const m = mgrs[i];
-          progress(i + 1, mgrs.length);
-          let stem = fileStem(m);
-          const n = (used.get(stem) || 0) + 1;
-          used.set(stem, n);
-          if (n > 1) stem += "-" + n;
-          downloadBlob(
-            await svgToPngBlob(composeSVG(forest, m, false).svg),
-            stem + ".png",
-          );
-          await new Promise((r) => setTimeout(r, 350));
-        }
-        return mgrs.length;
-      }
       function exportCSVFile() {
-        if (!people.length) return;
+        if (!items.length) return;
         const q = (s) =>
           /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-        /* optional columns are only written when somebody actually uses them;
-           IDs round-trip so an ID-matched import survives editing + re-import */
-        const anyDetail = people.some((p) => (p.detail || "").trim());
-        const anyTag = people.some((p) => (p.tag || "").trim());
-        const anyId = people.some((p) => (p.id || "").trim());
-        const header = ["Name", "Role", "Reports To"]
-          .concat(anyDetail ? ["Detail"] : [])
-          .concat(anyTag ? ["Tag", "Tag Colour"] : [])
-          .concat(anyId ? ["ID", "Manager ID"] : []);
-        const rowOf = (p) =>
-          [p.name, p.role, p.manager]
-            .concat(anyDetail ? [p.detail] : [])
-            .concat(
-              anyTag
-                ? [p.tag, (p.tag || "").trim() ? p.tagColor || "grey" : ""]
-                : [],
-            )
-            .concat(anyId ? [p.id || "", p.managerId || ""] : []);
         const csv =
-          header.join(",") +
-          "\n" +
-          people
+          "Lane,Item,Start,End,Status\n" +
+          items
             .map((p) =>
-              rowOf(p)
+              [p.lane, p.item, p.start, p.end, p.status]
                 .map((x) => q(x || ""))
                 .join(","),
             )
@@ -2340,476 +2106,27 @@ Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
         );
       }
 
-      /* ================= deck export (.pptx) =================
-         A .pptx is a ZIP of OOXML parts. Everything below is hand-built — a
-         stored (uncompressed) ZIP writer plus minimal PresentationML — so NO
-         library is vendored (CLAUDE.md network & dependency policy: prefer no
-         library; PowerPoint accepts stored ZIP entries, so compression buys
-         nothing). Each slide reuses the layout engine verbatim: the chart SVG
-         for that scope is parsed and mapped 1:1 to native PowerPoint shapes.
-         Fonts are requested as "Segoe UI"; the embedded theme names Calibri so
-         systems without Segoe UI fall back to it. */
-      const EMU_W = 12192000,
-        EMU_H = 6858000; // 16:9, EMU (914400/inch)
-      const ZIP_CRC = (() => {
-        const t = new Uint32Array(256);
-        for (let n = 0; n < 256; n++) {
-          let c = n;
-          for (let k = 0; k < 8; k++)
-            c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-          t[n] = c >>> 0;
-        }
-        return t;
-      })();
-      function makeZip(files) {
-        // stored (method 0) entries only
-        const enc = new TextEncoder();
-        const u16 = (v) => [v & 255, (v >> 8) & 255];
-        const u32 = (v) => [
-          v & 255,
-          (v >> 8) & 255,
-          (v >> 16) & 255,
-          (v >>> 24) & 255,
-        ];
-        const parts = [],
-          central = [];
-        let offset = 0;
-        files.forEach((f) => {
-          const name = enc.encode(f.name),
-            data = enc.encode(f.text);
-          let crc = 0xffffffff;
-          for (let i = 0; i < data.length; i++)
-            crc = ZIP_CRC[(crc ^ data[i]) & 255] ^ (crc >>> 8);
-          crc = (crc ^ 0xffffffff) >>> 0;
-          const head = new Uint8Array([
-            0x50,
-            0x4b,
-            3,
-            4,
-            ...u16(20),
-            ...u16(0),
-            ...u16(0),
-            ...u16(0),
-            ...u16(0x5821),
-            ...u32(crc),
-            ...u32(data.length),
-            ...u32(data.length),
-            ...u16(name.length),
-            ...u16(0),
-          ]);
-          central.push(
-            new Uint8Array([
-              0x50,
-              0x4b,
-              1,
-              2,
-              ...u16(20),
-              ...u16(20),
-              ...u16(0),
-              ...u16(0),
-              ...u16(0),
-              ...u16(0x5821),
-              ...u32(crc),
-              ...u32(data.length),
-              ...u32(data.length),
-              ...u16(name.length),
-              ...u16(0),
-              ...u16(0),
-              ...u16(0),
-              ...u16(0),
-              ...u32(0),
-              ...u32(offset),
-            ]),
-            name,
-          );
-          parts.push(head, name, data);
-          offset += head.length + name.length + data.length;
-        });
-        const cdSize = central.reduce((a, c) => a + c.length, 0);
-        const end = new Uint8Array([
-          0x50,
-          0x4b,
-          5,
-          6,
-          ...u16(0),
-          ...u16(0),
-          ...u16(files.length),
-          ...u16(files.length),
-          ...u32(cdSize),
-          ...u32(offset),
-          ...u16(0),
-        ]);
-        return new Blob([...parts, ...central, end], {
-          type: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        });
-      }
-
-      const PPTX_NS =
-        'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
-      const SLD_OPEN = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:sld ${PPTX_NS}><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>`;
-      const SLD_CLOSE = `</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>`;
-
-      /* one chart slide: parse composeSVG output (rects, axis-aligned line paths,
-         texts, g[data-branch] markers) and map it 1:1 to PresentationML shapes */
-      function chartSlideXML(svgStr) {
-        const doc = new DOMParser().parseFromString(svgStr, "image/svg+xml");
-        const root = doc.documentElement;
-        const [vx, vy, vw] = root
-          .getAttribute("viewBox")
-          .split(" ")
-          .map(Number);
-        const S = EMU_W / vw;
-        const X = (v) => Math.round((v - vx) * S),
-          Y = (v) => Math.round((v - vy) * S),
-          D = (v) => Math.round(v * S);
-        const pt = (u) => (u * 960) / vw; // chart units → points
-        const hex = (c) =>
-          c && c[0] === "#" ? c.slice(1).toUpperCase() : "000000";
-        const num = (el, a, d) => {
-          const v = el.getAttribute(a);
-          return v === null ? d : parseFloat(v);
-        };
-        const ctx = { id: 2 };
-
-        function walk(el) {
-          const lines = [],
-            boxes = [],
-            texts = [],
-            groups = [];
-          for (const ch of el.children) {
-            const t = ch.tagName;
-            if (t === "rect") {
-              const r = {
-                x: num(ch, "x", 0),
-                y: num(ch, "y", 0),
-                w: num(ch, "width", 0),
-                h: num(ch, "height", 0),
-                rx: num(ch, "rx", 0),
-                fill: ch.getAttribute("fill"),
-                stroke: ch.getAttribute("stroke"),
-                sw: num(ch, "stroke-width", 1),
-                dash: !!ch.getAttribute("stroke-dasharray"),
-                texts: [],
-              };
-              if (Math.abs(r.x - vx) < 1 && r.w >= vw - 2) continue; // frame background
-              boxes.push(r);
-            } else if (t === "path") {
-              const d = ch.getAttribute("d");
-              let m = d.match(/^M([-\d.]+) ([-\d.]+) L([-\d.]+) ([-\d.]+)$/);
-              if (m)
-                lines.push({
-                  x1: +m[1],
-                  y1: +m[2],
-                  x2: +m[3],
-                  y2: +m[4],
-                  stroke: ch.getAttribute("stroke"),
-                  w: num(ch, "stroke-width", 1),
-                  cap: false,
-                });
-              else if ((m = d.match(/^M([-\d.]+) ([-\d.]+) H([-\d.]+)$/)))
-                lines.push({
-                  x1: +m[1],
-                  y1: +m[2],
-                  x2: +m[3],
-                  y2: +m[2],
-                  stroke: ch.getAttribute("stroke"),
-                  w: num(ch, "stroke-width", 3),
-                  cap: true,
-                });
-            } else if (t === "text") {
-              texts.push({
-                x: num(ch, "x", 0),
-                y: num(ch, "y", 0),
-                anchor: ch.getAttribute("text-anchor") || "start",
-                fs: num(ch, "font-size", 12),
-                weight: num(ch, "font-weight", 400),
-                fill: ch.getAttribute("fill"),
-                opacity: num(ch, "opacity", 1),
-                ls: num(ch, "letter-spacing", 0),
-                str: ch.textContent,
-              });
-            } else if (t === "g") {
-              const inner = walk(ch);
-              if (ch.hasAttribute("data-branch"))
-                groups.push({ name: ch.getAttribute("data-branch"), ...inner });
-              else {
-                lines.push(...inner.lines);
-                boxes.push(...inner.boxes);
-                texts.push(...inner.texts);
-                groups.push(...inner.groups);
-              }
-            }
-          }
-          // attach each text to the smallest box containing its anchor point
-          const loose = [];
-          texts.forEach((tx) => {
-            let best = null;
-            boxes.forEach((b) => {
-              if (
-                tx.x >= b.x - 1 &&
-                tx.x <= b.x + b.w + 1 &&
-                tx.y >= b.y - 2 &&
-                tx.y <= b.y + b.h + 2 &&
-                (!best || b.w * b.h < best.w * best.h)
-              )
-                best = b;
-            });
-            if (best) best.texts.push(tx);
-            else loose.push(tx);
-          });
-          return { lines, boxes, texts: loose, groups };
-        }
-
-        const para = (t, befUnits, algnOverride) => {
-          const algn = algnOverride || (t.anchor === "middle" ? "ctr" : "l");
-          const fillX =
-            t.opacity < 1
-              ? `<a:srgbClr val="${hex(t.fill)}"><a:alpha val="${Math.round(t.opacity * 100000)}"/></a:srgbClr>`
-              : `<a:srgbClr val="${hex(t.fill)}"/>`;
-          const spc =
-            Math.abs(t.ls) > 0.01 ? ` spc="${Math.round(pt(t.ls) * 100)}"` : "";
-          return `<a:p><a:pPr algn="${algn}"><a:lnSpc><a:spcPts val="${Math.round(pt(t.fs) * 100)}"/></a:lnSpc><a:spcBef><a:spcPts val="${Math.max(0, Math.round(pt(befUnits) * 100))}"/></a:spcBef></a:pPr><a:r><a:rPr lang="en-GB" sz="${Math.max(100, Math.round(pt(t.fs) * 100))}"${t.weight >= 600 ? ' b="1"' : ""}${spc}><a:solidFill>${fillX}</a:solidFill><a:latin typeface="Segoe UI"/></a:rPr><a:t>${esc(t.str)}</a:t></a:r></a:p>`;
-        };
-
-        const boxXML = (b) => {
-          const id = ctx.id++;
-          const geom =
-            b.rx > 0
-              ? `<a:prstGeom prst="roundRect"><a:avLst><a:gd name="adj" fmla="val ${Math.min(50000, Math.round((b.rx / (Math.min(b.w, b.h) / 2)) * 50000))}"/></a:avLst></a:prstGeom>`
-              : `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>`;
-          const fill =
-            !b.fill || b.fill === "none"
-              ? "<a:noFill/>"
-              : `<a:solidFill><a:srgbClr val="${hex(b.fill)}"/></a:solidFill>`;
-          const ln = b.stroke
-            ? `<a:ln w="${Math.max(6350, D(b.sw))}"><a:solidFill><a:srgbClr val="${hex(b.stroke)}"/></a:solidFill>${b.dash ? '<a:prstDash val="dash"/>' : ""}</a:ln>`
-            : "<a:ln><a:noFill/></a:ln>";
-          let tb = "<p:txBody><a:bodyPr/><a:lstStyle/><a:p/></p:txBody>";
-          if (b.texts.length) {
-            b.texts.sort((u, v) => u.y - v.y);
-            const ctr = b.texts[0].anchor === "middle";
-            if (b.texts.length === 1 && ctr) {
-              tb = `<p:txBody><a:bodyPr wrap="none" lIns="0" tIns="0" rIns="0" bIns="0" anchor="ctr"/><a:lstStyle/>${para(b.texts[0], 0)}</p:txBody>`;
-            } else {
-              const lIns = ctr ? 0 : Math.max(0, D(b.texts[0].x - b.x));
-              const tIns = Math.max(
-                0,
-                D(b.texts[0].y - b.y - b.texts[0].fs * 0.8),
-              );
-              const ps = b.texts
-                .map((t, i) => para(t, i ? t.y - b.texts[i - 1].y - t.fs : 0))
-                .join("");
-              tb = `<p:txBody><a:bodyPr wrap="none" lIns="${lIns}" tIns="${tIns}" rIns="0" bIns="0" anchor="t"/><a:lstStyle/>${ps}</p:txBody>`;
-            }
-          }
-          return `<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="card ${id}"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="${X(b.x)}" y="${Y(b.y)}"/><a:ext cx="${D(b.w)}" cy="${D(b.h)}"/></a:xfrm>${geom}${fill}${ln}</p:spPr>${tb}</p:sp>`;
-        };
-
-        const lineXML = (l) => {
-          const id = ctx.id++;
-          return `<p:cxnSp><p:nvCxnSpPr><p:cNvPr id="${id}" name="line ${id}"/><p:cNvCxnSpPr/><p:nvPr/></p:nvCxnSpPr><p:spPr><a:xfrm><a:off x="${X(Math.min(l.x1, l.x2))}" y="${Y(Math.min(l.y1, l.y2))}"/><a:ext cx="${D(Math.abs(l.x2 - l.x1))}" cy="${D(Math.abs(l.y2 - l.y1))}"/></a:xfrm><a:prstGeom prst="line"><a:avLst/></a:prstGeom><a:ln w="${Math.max(6350, D(l.w))}"${l.cap ? ' cap="rnd"' : ""}><a:solidFill><a:srgbClr val="${hex(l.stroke)}"/></a:solidFill></a:ln></p:spPr></p:cxnSp>`;
-        };
-
-        const textBoxXML = (t) => {
-          const id = ctx.id++;
-          measureCtx.font =
-            (t.weight >= 600 ? "700 " : "") + t.fs + "px " + FONT;
-          const w = measureCtx.measureText(t.str).width + t.fs * 0.8;
-          const x =
-            t.anchor === "end"
-              ? t.x - w
-              : t.anchor === "middle"
-                ? t.x - w / 2
-                : t.x;
-          const algn =
-            t.anchor === "end" ? "r" : t.anchor === "middle" ? "ctr" : "l";
-          return `<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="text ${id}"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="${X(x)}" y="${Y(t.y - t.fs * 0.8)}"/><a:ext cx="${D(w)}" cy="${D(t.fs * 1.4)}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr><p:txBody><a:bodyPr wrap="none" lIns="0" tIns="0" rIns="0" bIns="0" anchor="t"/><a:lstStyle/>${para(t, 0, algn)}</p:txBody></p:sp>`;
-        };
-
-        // lines emit first within each scope = back layer
-        const emitScope = (s) =>
-          s.lines.map(lineXML).join("") + s.boxes.map(boxXML).join("");
-
-        const groupXML = (g) => {
-          if (g.lines.length + g.boxes.length === 1) return emitScope(g);
-          let x0 = Infinity,
-            y0 = Infinity,
-            x1 = -Infinity,
-            y1 = -Infinity;
-          g.boxes.forEach((b) => {
-            x0 = Math.min(x0, b.x);
-            y0 = Math.min(y0, b.y - 8); // -8: tag chips overlap card tops
-            x1 = Math.max(x1, b.x + b.w);
-            y1 = Math.max(y1, b.y + b.h);
-          });
-          g.lines.forEach((l) => {
-            x0 = Math.min(x0, l.x1, l.x2);
-            y0 = Math.min(y0, l.y1, l.y2);
-            x1 = Math.max(x1, l.x1, l.x2);
-            y1 = Math.max(y1, l.y1, l.y2);
-          });
-          const kids = emitScope(g);
-          const id = ctx.id++;
-          return `<p:grpSp><p:nvGrpSpPr><p:cNvPr id="${id}" name="Team — ${esc(g.name)}"/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="${X(x0)}" y="${Y(y0)}"/><a:ext cx="${D(x1 - x0)}" cy="${D(y1 - y0)}"/><a:chOff x="${X(x0)}" y="${Y(y0)}"/><a:chExt cx="${D(x1 - x0)}" cy="${D(y1 - y0)}"/></a:xfrm></p:grpSpPr>${kids}</p:grpSp>`;
-        };
-
-        const top = walk(root);
-        return (
-          SLD_OPEN +
-          top.lines.map(lineXML).join("") +
-          top.boxes.map(boxXML).join("") +
-          top.groups.map(groupXML).join("") +
-          top.texts.map(textBoxXML).join("") +
-          SLD_CLOSE
-        );
-      }
-
-      function titleSlideXML(total) {
-        const T = THEMES[settings.theme];
-        const hx = (c) => c.slice(1).toUpperCase();
-        const LM = Math.round(EMU_W * 0.05);
-        const raw = settings.title.trim() || "Org chart";
-        const title = truncate(raw, 34, (EMU_W - 2 * LM) / 12700, 700);
-        const date = new Date().toLocaleDateString("en-GB", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        });
-        const sub = `${date} · ${total} ${total === 1 ? "person" : "people"}`;
-        const tbox = (id, y, h, txt, szPt, bold, color) =>
-          `<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="text ${id}"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="${LM}" y="${y}"/><a:ext cx="${EMU_W - 2 * LM}" cy="${h}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr><p:txBody><a:bodyPr wrap="none" lIns="0" tIns="0" rIns="0" bIns="0" anchor="t"/><a:lstStyle/><a:p><a:pPr algn="l"/><a:r><a:rPr lang="en-GB" sz="${szPt * 100}"${bold ? ' b="1"' : ""}><a:solidFill><a:srgbClr val="${color}"/></a:solidFill><a:latin typeface="Segoe UI"/></a:rPr><a:t>${esc(txt)}</a:t></a:r></a:p></p:txBody></p:sp>`;
-        const bar = `<p:sp><p:nvSpPr><p:cNvPr id="3" name="bar"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="${LM}" y="3470000"/><a:ext cx="${Math.round(EMU_W * 0.045)}" cy="${Math.round(EMU_W * 0.003)}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="${hx(T.accent)}"/></a:solidFill><a:ln><a:noFill/></a:ln></p:spPr><p:txBody><a:bodyPr/><a:lstStyle/><a:p/></p:txBody></p:sp>`;
-        return (
-          SLD_OPEN +
-          tbox(2, 2780000, 700000, title, 34, true, hx(T.ink)) +
-          bar +
-          tbox(4, 3700000, 380000, sub, 14, false, hx(T.sub)) +
-          SLD_CLOSE
-        );
-      }
-
-      function pptxFiles(slideXMLs) {
-        const n = slideXMLs.length;
-        const R =
-          "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
-        const XML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`;
-        const rels = (items) =>
-          `${XML}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${items
-            .map(
-              (it, i) =>
-                `<Relationship Id="rId${i + 1}" Type="${R}/${it[0]}" Target="${it[1]}"/>`,
-            )
-            .join("")}</Relationships>`;
-        const files = [
-          {
-            name: "[Content_Types].xml",
-            text: `${XML}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/><Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/><Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/><Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>${slideXMLs.map((_, i) => `<Override PartName="/ppt/slides/slide${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`).join("")}</Types>`,
-          },
-          {
-            name: "_rels/.rels",
-            text: rels([["officeDocument", "ppt/presentation.xml"]]),
-          },
-          {
-            name: "ppt/presentation.xml",
-            text: `${XML}<p:presentation ${PPTX_NS}><p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId1"/></p:sldMasterIdLst><p:sldIdLst>${slideXMLs.map((_, i) => `<p:sldId id="${256 + i}" r:id="rId${i + 2}"/>`).join("")}</p:sldIdLst><p:sldSz cx="${EMU_W}" cy="${EMU_H}"/><p:notesSz cx="6858000" cy="9144000"/></p:presentation>`,
-          },
-          {
-            name: "ppt/_rels/presentation.xml.rels",
-            text: rels([
-              ["slideMaster", "slideMasters/slideMaster1.xml"],
-              ...slideXMLs.map((_, i) => ["slide", `slides/slide${i + 1}.xml`]),
-            ]),
-          },
-          {
-            name: "ppt/slideMasters/slideMaster1.xml",
-            text: `${XML}<p:sldMaster ${PPTX_NS}><p:cSld><p:bg><p:bgPr><a:solidFill><a:schemeClr val="lt1"/></a:solidFill><a:effectLst/></p:bgPr></p:bg><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/></p:spTree></p:cSld><p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/><p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rId1"/></p:sldLayoutIdLst><p:txStyles><p:titleStyle/><p:bodyStyle/><p:otherStyle/></p:txStyles></p:sldMaster>`,
-          },
-          {
-            name: "ppt/slideMasters/_rels/slideMaster1.xml.rels",
-            text: rels([
-              ["slideLayout", "../slideLayouts/slideLayout1.xml"],
-              ["theme", "../theme/theme1.xml"],
-            ]),
-          },
-          {
-            name: "ppt/slideLayouts/slideLayout1.xml",
-            text: `${XML}<p:sldLayout ${PPTX_NS} type="blank" preserve="1"><p:cSld name="Blank"><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/></p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sldLayout>`,
-          },
-          {
-            name: "ppt/slideLayouts/_rels/slideLayout1.xml.rels",
-            text: rels([["slideMaster", "../slideMasters/slideMaster1.xml"]]),
-          },
-          {
-            name: "ppt/theme/theme1.xml",
-            text: `${XML}<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="Orgami"><a:themeElements><a:clrScheme name="Orgami"><a:dk1><a:srgbClr val="181B20"/></a:dk1><a:lt1><a:srgbClr val="FFFFFF"/></a:lt1><a:dk2><a:srgbClr val="3A3F47"/></a:dk2><a:lt2><a:srgbClr val="E9EAEC"/></a:lt2><a:accent1><a:srgbClr val="21557F"/></a:accent1><a:accent2><a:srgbClr val="1E7A4A"/></a:accent2><a:accent3><a:srgbClr val="F0B429"/></a:accent3><a:accent4><a:srgbClr val="9F2D3C"/></a:accent4><a:accent5><a:srgbClr val="2B6CB0"/></a:accent5><a:accent6><a:srgbClr val="6E1F33"/></a:accent6><a:hlink><a:srgbClr val="21557F"/></a:hlink><a:folHlink><a:srgbClr val="6E1F33"/></a:folHlink></a:clrScheme><a:fontScheme name="Orgami"><a:majorFont><a:latin typeface="Calibri"/><a:ea typeface=""/><a:cs typeface=""/></a:majorFont><a:minorFont><a:latin typeface="Calibri"/><a:ea typeface=""/><a:cs typeface=""/></a:minorFont></a:fontScheme><a:fmtScheme name="Office"><a:fillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:fillStyleLst><a:lnStyleLst><a:ln w="6350"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln><a:ln w="12700"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln><a:ln w="19050"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln></a:lnStyleLst><a:effectStyleLst><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle></a:effectStyleLst><a:bgFillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:bgFillStyleLst></a:fmtScheme></a:themeElements></a:theme>`,
-          },
-        ];
-        slideXMLs.forEach((xml, i) => {
-          files.push({ name: `ppt/slides/slide${i + 1}.xml`, text: xml });
-          files.push({
-            name: `ppt/slides/_rels/slide${i + 1}.xml.rels`,
-            text: rels([["slideLayout", "../slideLayouts/slideLayout1.xml"]]),
-          });
-        });
-        return files;
-      }
-
-      /* deck = title slide + full org + one slide per manager-with-reports
-         (DFS = the chart's left-to-right, top-down order; the single org root
-         is skipped because slide 2 already IS that view) */
-      function buildDeck() {
-        const forest = buildForest(people);
-        const savedTransparent = settings.transparent;
-        settings.transparent = false; // deck slides always carry their titles
-        try {
-          const mgrs = [];
-          const walk = (n) => {
-            if (n.children.length) mgrs.push(n);
-            n.children.forEach(walk);
-          };
-          forest.roots.forEach(walk);
-          const scopes = mgrs.filter(
-            (m) => !(forest.roots.length === 1 && m === forest.roots[0]),
-          );
-          const slides = [
-            titleSlideXML(forest.total),
-            chartSlideXML(composeSVG(forest, null, false).svg),
-            ...scopes.map((m) =>
-              chartSlideXML(composeSVG(forest, m, false).svg),
-            ),
-          ];
-          return { blob: makeZip(pptxFiles(slides)), slides: slides.length };
-        } finally {
-          settings.transparent = savedTransparent;
-        }
-      }
-
       /* ---- header Export split button: primary = one-click PNG, ▾ = menu ---- */
       const exportMenu = $("#exportMenu"),
         btnExportMain = $("#btnExportMain"),
         btnExportMore = $("#btnExportMore");
-      let exportBusy = false;
+      let exportBusy = false; // reserved for batch exports (deck, v2)
 
-      function setExportLabel(txt) {
-        btnExportMain.textContent = txt;
-      }
       function updateExportUI() {
         if (exportBusy) return;
-        const has = people.length > 0;
+        const has = plottedCount > 0;
         btnExportMain.disabled = btnExportMore.disabled = !has;
         const reason = has
           ? ""
-          : "Nothing to export yet — add some people first";
+          : "Nothing to export yet — add some items first";
         btnExportMain.title = reason;
         btnExportMore.title = reason;
         if (!has) closeExportMenu();
       }
       function openExportMenu() {
-        $("#menuScope").textContent = "This slide only";
-
         exportMenu.hidden = false;
         btnExportMore.setAttribute("aria-expanded", "true");
-        exportMenu.querySelector(".menu-item").focus();
+        exportMenu.querySelector(".menu-item:not(:disabled)").focus();
       }
       function closeExportMenu(focusBack) {
         if (exportMenu.hidden) return;
@@ -2830,23 +2147,23 @@ Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
           closeExportMenu();
       });
       exportMenu.addEventListener("keydown", (e) => {
-        const items = [...exportMenu.querySelectorAll(".menu-item")];
-        const i = items.indexOf(document.activeElement);
+        const mi = [...exportMenu.querySelectorAll(".menu-item:not(:disabled)")];
+        const i = mi.indexOf(document.activeElement);
         if (e.key === "Escape") {
           e.stopPropagation();
           closeExportMenu(true);
         } else if (e.key === "ArrowDown") {
           e.preventDefault();
-          items[(i + 1) % items.length].focus();
+          mi[(i + 1) % mi.length].focus();
         } else if (e.key === "ArrowUp") {
           e.preventDefault();
-          items[(i - 1 + items.length) % items.length].focus();
+          mi[(i - 1 + mi.length) % mi.length].focus();
         } else if (e.key === "Home") {
           e.preventDefault();
-          items[0].focus();
+          mi[0].focus();
         } else if (e.key === "End") {
           e.preventDefault();
-          items[items.length - 1].focus();
+          mi[mi.length - 1].focus();
         }
       });
       exportMenu.querySelectorAll(".menu-item").forEach((it) =>
@@ -2855,38 +2172,12 @@ Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
           runExport(it.dataset.act);
         }),
       );
-      async function runExport(act) {
-        if (exportBusy || !people.length) return;
+      function runExport(act) {
+        if (exportBusy || !plottedCount) return;
         if (act === "png") return exportCurrentPNG();
         if (act === "svg") return exportCurrentSVG();
         if (act === "csv") return exportCSVFile();
-        /* batch exports: show progress on the button, block re-triggering */
-        exportBusy = true;
-        btnExportMain.disabled = btnExportMore.disabled = true;
-        try {
-          if (act === "deck") {
-            setExportLabel("Building deck…");
-            await new Promise((r) => setTimeout(r, 30)); // let the label paint
-            const { blob, slides } = buildDeck();
-            downloadBlob(blob, fileStem() + "-deck.pptx");
-            setExportLabel(`Deck saved — ${slides} slides`);
-          } else if (act === "all") {
-            const n = await exportAllTeams((i, total) =>
-              setExportLabel(`PNG ${i}/${total}…`),
-            );
-            setExportLabel(
-              n ? `Saved ${n} PNG${n === 1 ? "" : "s"}` : "No teams to export",
-            );
-          }
-        } catch (err) {
-          setExportLabel("Export failed");
-        } finally {
-          setTimeout(() => {
-            exportBusy = false;
-            setExportLabel("Export PNG");
-            updateExportUI();
-          }, 2200);
-        }
+        /* "deck" is disabled in the menu (coming soon) and never reaches here */
       }
 
       /* ================= wiring ================= */
@@ -2913,38 +2204,20 @@ Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
           showStatus("err", res.err);
           return;
         }
-        people = res.people;
-        const { roots, orphans } = buildForest(people);
-        let msg = `Loaded ${people.length} people.`;
-        if (res.skipped)
-          msg += ` Skipped ${res.skipped} row${res.skipped === 1 ? "" : "s"} with no name.`;
-        if (orphans)
-          msg += res.idMode
-            ? ` ${orphans} Manager ID${orphans === 1 ? "" : "s"} didn't match anyone — those people were placed at the top level.`
-            : ` ${orphans} manager name${orphans === 1 ? "" : "s"} didn't match anyone — those people were placed at the top level.`;
-        if (res.dupName)
-          msg +=
-            ` ${res.dupName.count} people named ${res.dupName.name} — reporting lines may be wrong; add ID and Manager ID columns to fix this.` +
-            (res.dupName.extra
-              ? ` (Plus ${res.dupName.extra} more duplicated name${res.dupName.extra === 1 ? "" : "s"}.)`
-              : "");
-        if (res.dupIds)
-          msg += ` ${res.dupIds} duplicate ID${res.dupIds === 1 ? "" : "s"} — reporting lines may be wrong; the first match wins.`;
-        if (res.badColors)
-          msg += ` ${res.badColors} unrecognised tag colour${res.badColors === 1 ? "" : "s"} replaced with grey (use green, amber, red, blue or grey).`;
+        items = res.items;
+        const model = buildModel(items);
+        let msg = `Loaded ${model.plotted} item${model.plotted === 1 ? "" : "s"} across ${model.lanes.length} lane${model.lanes.length === 1 ? "" : "s"}.`;
+        if (res.badStatus)
+          msg += ` ${res.badStatus} unrecognised status${res.badStatus === 1 ? "" : "es"} replaced with grey (use green, amber, red, blue or grey).`;
+        if (items.length > 60)
+          msg += " That's a lot for one slide — consider splitting the plan.";
+        /* row-by-row date problems appear below, from the same model the
+           slide is drawn from — see showWarnings() */
         showStatus(
-          orphans || res.skipped || res.badColors || res.dupName || res.dupIds
-            ? "warn"
-            : "ok",
+          model.warnings.length || res.badStatus ? "warn" : "ok",
           msg,
         );
-        if (people.length > 80)
-          showStatus(
-            "warn",
-            msg +
-              " That's a big org for one slide — consider charting one team at a time.",
-          );
-        renderPeopleList();
+        renderItemList();
         renderChart();
       }
       $("#btnParse").addEventListener("click", () =>
@@ -2962,19 +2235,17 @@ Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
         e.target.value = "";
       });
       $("#btnAdd").addEventListener("click", () => {
-        people.push({
-          name: "",
-          role: "",
-          manager: people.length ? people[0].name : "",
-          detail: "",
-          tag: "",
-          tagColor: "",
-          id: "",
-          managerId: people.length ? people[0].id || "" : "",
+        items.push({
+          lane: items.length ? items[items.length - 1].lane : "",
+          item: "",
+          start: "",
+          end: "",
+          status: "",
+          row: 0, // hand-added: warnings name the item, not a CSV row
         });
-        renderPeopleList();
+        renderItemList();
         renderChart();
-        const last = $("#peopleList").lastElementChild;
+        const last = $("#itemList").lastElementChild;
         if (last) last.querySelector("input")?.focus();
       });
       $("#btnSample").addEventListener("click", () => {
@@ -2982,9 +2253,9 @@ Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
         applyCSV(SAMPLE);
       });
       $("#btnClear").addEventListener("click", () => {
-        people = [];
+        items = [];
         $("#csvStatus").className = "status";
-        renderPeopleList();
+        renderItemList();
         renderChart();
       });
 
@@ -2992,13 +2263,13 @@ Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
         settings.title = e.target.value;
         renderChart();
       });
-      $("#maxVis").addEventListener("input", (e) => {
-        settings.maxVis = +e.target.value;
-        $("#maxVisVal").textContent = e.target.value;
+      $("#maxRows").addEventListener("input", (e) => {
+        settings.maxRows = +e.target.value;
+        $("#maxRowsVal").textContent = e.target.value;
         renderChart();
       });
-      $("#chkCounts").addEventListener("change", (e) => {
-        settings.counts = e.target.checked;
+      $("#chkToday").addEventListener("change", (e) => {
+        settings.today = e.target.checked;
         renderChart();
       });
       $("#chkTransparent").addEventListener("change", (e) => {
@@ -3006,19 +2277,6 @@ Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
         renderChart();
       });
 
-      /* drill-down: delegated, since the SVG is rebuilt on every render */
-      $("#slide").addEventListener("click", (e) => {
-        const g = e.target.closest("[data-drill]");
-        if (g) drillTo(+g.getAttribute("data-drill"));
-      });
-      $("#slide").addEventListener("keydown", (e) => {
-        if (e.key !== "Enter" && e.key !== " ") return;
-        const g = e.target.closest("[data-drill]");
-        if (g) {
-          e.preventDefault();
-          drillTo(+g.getAttribute("data-drill"));
-        }
-      });
       document.addEventListener("keydown", (e) => {
         if (e.key !== "Escape") return;
         const em = $("#exportMenu");
@@ -3026,12 +2284,7 @@ Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
           // Esc closes the export menu before anything else
           em.hidden = true;
           $("#btnExportMore").setAttribute("aria-expanded", "false");
-          return;
         }
-        if (!scopePath.length) return;
-        if (document.querySelector("dialog[open]")) return; // Esc closes the dialog (native), not the scope
-        if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
-        goUp();
       });
 
       /* about popover — native <dialog>: Esc + backdrop come for free */
@@ -3063,7 +2316,7 @@ Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
       $("#btnTemplate").addEventListener("click", () =>
         downloadBlob(
           new Blob([CSV_TEMPLATE], { type: "text/csv" }),
-          "orgami-template.csv",
+          "timelane-template.csv",
         ),
       );
 
@@ -3087,12 +2340,13 @@ Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
       });
 
       /* ================= autosave (local only, never transmitted) ================= */
-      const SAVE_KEY = "orgami-state-v1";
+      /* a 'timelane' key, so the two sister tools never collide in one browser */
+      const SAVE_KEY = "timelane-state-v1";
       /* localStorage may be unavailable (private browsing, blocked) — probe once
          and degrade to exactly today's behaviour: no autosave, no restore line */
       const store = (() => {
         try {
-          const t = "__orgami_probe__";
+          const t = "__timelane_probe__";
           localStorage.setItem(t, "1");
           localStorage.removeItem(t);
           return localStorage;
@@ -3109,17 +2363,7 @@ Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
       function saveState() {
         if (!store) return;
         try {
-          store.setItem(
-            SAVE_KEY,
-            JSON.stringify({
-              v: 1,
-              people,
-              settings,
-              scope: scopePath
-                .map((p) => people.indexOf(p))
-                .filter((i) => i >= 0),
-            }),
-          );
+          store.setItem(SAVE_KEY, JSON.stringify({ v: 1, items, settings }));
         } catch (e) {
           /* quota / races: autosave must never break the app */
         }
@@ -3130,34 +2374,27 @@ Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
           const raw = store.getItem(SAVE_KEY);
           if (!raw) return null;
           const s = JSON.parse(raw);
-          if (!s || !Array.isArray(s.people)) return null;
-          const ppl = s.people
+          if (!s || !Array.isArray(s.items)) return null;
+          const its = s.items
             .filter((p) => p && typeof p === "object")
             .map((p) => ({
-              name: String(p.name ?? ""),
-              role: String(p.role ?? ""),
-              manager: String(p.manager ?? ""),
-              detail: String(p.detail ?? ""),
-              tag: String(p.tag ?? ""),
-              tagColor: TAGC[p.tagColor] ? p.tagColor : "",
-              id: String(p.id ?? ""),
-              managerId: String(p.managerId ?? ""),
+              lane: String(p.lane ?? ""),
+              item: String(p.item ?? ""),
+              start: String(p.start ?? ""),
+              end: String(p.end ?? ""),
+              status: STATUS[p.status] ? p.status : "",
+              row: Number.isInteger(p.row) ? p.row : 0,
             }));
           const st = s.settings || {};
           return {
-            people: ppl,
+            items: its,
             settings: {
               title: String(st.title ?? ""),
               theme: THEMES[st.theme] ? st.theme : "marine",
-              maxVis: Math.min(10, Math.max(3, +st.maxVis || 6)),
-              counts: st.counts !== false,
+              maxRows: Math.min(8, Math.max(2, +st.maxRows || 4)),
+              today: st.today !== false,
               transparent: !!st.transparent,
             },
-            scope: Array.isArray(s.scope)
-              ? s.scope.filter(
-                  (i) => Number.isInteger(i) && i >= 0 && i < ppl.length,
-                )
-              : [],
           };
         } catch (e) {
           // corrupt state: discard it and boot the sample — never a broken boot
@@ -3169,26 +2406,25 @@ Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
       }
       function syncControls() {
         $("#titleBox").value = settings.title;
-        $("#maxVis").value = settings.maxVis;
-        $("#maxVisVal").textContent = settings.maxVis;
-        $("#chkCounts").checked = settings.counts;
+        $("#maxRows").value = settings.maxRows;
+        $("#maxRowsVal").textContent = settings.maxRows;
+        $("#chkToday").checked = settings.today;
         $("#chkTransparent").checked = settings.transparent;
         sw.querySelectorAll(".swatch").forEach((x) =>
           x.setAttribute("aria-pressed", x.dataset.k === settings.theme),
         );
       }
       function loadSampleFresh() {
-        scopePath = [];
         $("#csvBox").value = SAMPLE;
         applyCSV(SAMPLE);
-        $("#titleBox").value = "Meridian Group — leadership structure";
+        $("#titleBox").value = "Meridian Group — transformation plan on a page";
         settings.title = $("#titleBox").value;
         renderChart();
       }
       function startFresh() {
         if (
           !confirm(
-            "Start fresh? This clears the chart saved on this device and loads the sample.",
+            "Start fresh? This clears the plan saved on this device and loads the sample.",
           )
         )
           return;
@@ -3205,15 +2441,14 @@ Sam Patel,Operations Analyst,Jordan Lee,Remote,NEW HIRE,green`;
         $("#restoreBar").hidden = true;
       });
 
-      /* boot: restore the saved chart if there is one; the sample only ever
+      /* boot: restore the saved plan if there is one; the sample only ever
          loads when nothing is saved — it must never overwrite saved work */
       const savedState = loadState();
       if (savedState) {
-        people = savedState.people;
+        items = savedState.items;
         settings = savedState.settings;
-        scopePath = savedState.scope.map((i) => people[i]);
         syncControls();
-        renderPeopleList();
+        renderItemList();
         renderChart();
         $("#restoreBar").hidden = false;
       } else {
