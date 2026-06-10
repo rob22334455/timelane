@@ -64,6 +64,12 @@ name their concepts here before adding UI:
 - "today line" — the vertical current-date marker
 - "fold" / "+ n more items" — lane overflow behaviour
 - "slide" — what you see and export
+- "Show folded items strip" — Slide-tab toggle; off hides the
+  "+ n more items" indicators (folding still limits rows)
+- "Show milestones" — Slide-tab toggle; off hides diamonds and
+  their labels (milestone-only lanes keep their empty band)
+- "Transparent background" — Slide-tab toggle; checkerboard
+  preview (UI-only), alpha PNG, SVG without its background rect
 - Export menu groups: "This slide", "Whole plan", "Your data";
   actions "PNG image", "SVG", "Deck (.pptx)", "CSV"
 

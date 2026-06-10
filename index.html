@@ -214,12 +214,6 @@
       .menu-item:disabled:hover {
         background: none;
       }
-      .menu-chk {
-        padding: 9px 9px 7px;
-        border-top: 1px solid var(--hair-2);
-        margin-top: 5px;
-        font-size: 12.5px;
-      }
 
       /* ---------- layout ---------- */
       .wrap {
@@ -902,10 +896,6 @@
           <button class="menu-item" role="menuitem" data-act="csv">
             CSV<span class="menu-sub">reopen or edit later</span>
           </button>
-          <label class="chk menu-chk"
-            ><input type="checkbox" id="chkTransparent" /> Transparent
-            background</label
-          >
         </div>
       </div>
     </header>
@@ -1014,6 +1004,18 @@
             <label class="chk"
               ><input type="checkbox" id="chkToday" checked /> Show the today
               line</label
+            >
+            <label class="chk" style="margin-top: 8px"
+              ><input type="checkbox" id="chkFoldStrip" checked /> Show folded
+              items strip</label
+            >
+            <label class="chk" style="margin-top: 8px"
+              ><input type="checkbox" id="chkMilestones" checked /> Show
+              milestones</label
+            >
+            <label class="chk" style="margin-top: 8px"
+              ><input type="checkbox" id="chkTransparent" /> Transparent
+              background</label
             >
           </div>
         </div>
@@ -1192,10 +1194,10 @@
             <b>Your data</b> — <b>CSV</b>, reopen or edit later.
           </p>
           <p>
-            Tick <b>Transparent background</b> in the menu to export with
-            nothing behind the chart — a PNG with an alpha background, an SVG
-            without its background rectangle — for pasting straight onto branded
-            slide templates.
+            <b>Transparent background</b> on the Slide tab puts nothing behind
+            the chart — the preview shows a checkerboard (never exported), the
+            PNG gets an alpha background and the SVG loses its background
+            rectangle — for pasting straight onto branded slide templates.
           </p>
         </section>
 
@@ -1218,6 +1220,8 @@
         theme: "marine",
         maxRows: 4,
         today: true,
+        foldStrip: true,
+        milestones: true,
         transparent: false,
       };
 
@@ -1793,8 +1797,10 @@ People,Operating model design,Mar 2026,May 2026,`;
             rows = stackRows(keep.sort(byX));
           }
           /* milestones: label-aware extents, so same-date clusters stack into
-             extra baseline rows instead of overlapping */
-          const miles = lane.miles
+             extra baseline rows instead of overlapping. "Show milestones" off
+             hides them and the lane reclaims their rows — but a milestone-only
+             lane keeps its (empty) band: it is still part of the plan. */
+          const miles = (settings.milestones ? lane.miles : [])
             .map((m) => {
               const cx = x(dayOf(m.start) + 0.5);
               measureCtx.font = "600 9.5px " + FONT;
@@ -1806,17 +1812,21 @@ People,Operating model design,Mar 2026,May 2026,`;
             })
             .sort(byX);
           const msRows = stackRows(miles);
+          /* "Show folded items strip" off hides the indicator and reclaims its
+             height; folding itself still limits the rows */
+          const fold = hidden.length > 0 && settings.foldStrip;
           const h = Math.max(
             34,
             L.padY * 2 +
               rows.length * L.rowH +
-              (hidden.length ? L.foldH : 0) +
+              (fold ? L.foldH : 0) +
               msRows.length * L.msH,
           );
           laid.push({
             lane,
             rows,
             hidden,
+            fold,
             msRows,
             y: contentH,
             h,
@@ -1884,7 +1894,7 @@ People,Operating model design,Mar 2026,May 2026,`;
               }
             });
           });
-          if (La.hidden.length) {
+          if (La.fold) {
             const fy = topY + La.rows.length * L.rowH + 1;
             let fx1 = Math.min(...La.hidden.map((b) => b.x1)),
               fx2 = Math.max(...La.hidden.map((b) => b.x2));
@@ -1901,7 +1911,7 @@ People,Operating model design,Mar 2026,May 2026,`;
             );
           }
           const msTop =
-            topY + La.rows.length * L.rowH + (La.hidden.length ? L.foldH : 0);
+            topY + La.rows.length * L.rowH + (La.fold ? L.foldH : 0);
           La.msRows.forEach((row, ri) => {
             row.forEach((m) => {
               const cy = msTop + ri * L.msH + L.msH / 2;
@@ -2337,6 +2347,14 @@ People,Operating model design,Mar 2026,May 2026,`;
         settings.today = e.target.checked;
         renderChart();
       });
+      $("#chkFoldStrip").addEventListener("change", (e) => {
+        settings.foldStrip = e.target.checked;
+        renderChart();
+      });
+      $("#chkMilestones").addEventListener("change", (e) => {
+        settings.milestones = e.target.checked;
+        renderChart();
+      });
       $("#chkTransparent").addEventListener("change", (e) => {
         settings.transparent = e.target.checked;
         renderChart();
@@ -2458,6 +2476,8 @@ People,Operating model design,Mar 2026,May 2026,`;
               theme: THEMES[st.theme] ? st.theme : "marine",
               maxRows: Math.min(8, Math.max(2, +st.maxRows || 4)),
               today: st.today !== false,
+              foldStrip: st.foldStrip !== false,
+              milestones: st.milestones !== false,
               transparent: !!st.transparent,
             },
           };
@@ -2474,6 +2494,8 @@ People,Operating model design,Mar 2026,May 2026,`;
         $("#maxRows").value = settings.maxRows;
         $("#maxRowsVal").textContent = settings.maxRows;
         $("#chkToday").checked = settings.today;
+        $("#chkFoldStrip").checked = settings.foldStrip;
+        $("#chkMilestones").checked = settings.milestones;
         $("#chkTransparent").checked = settings.transparent;
         sw.querySelectorAll(".swatch").forEach((x) =>
           x.setAttribute("aria-pressed", x.dataset.k === settings.theme),
