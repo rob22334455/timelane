@@ -630,6 +630,71 @@
         font-size: 12.5px;
       }
 
+      /* breadcrumb + drill-down chrome (never exported) */
+      .crumbs {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        flex-wrap: wrap;
+        margin: -3px 0 9px;
+        min-height: 27px;
+      }
+      .crumb {
+        background: none;
+        border: none;
+        font-family: var(--ui);
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--accent);
+        cursor: pointer;
+        padding: 3px 4px;
+        border-radius: 4px;
+      }
+      .crumb:hover {
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+      .crumb:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+      }
+      .crumb-cur {
+        font-size: 12.5px;
+        font-weight: 700;
+        color: var(--ink);
+        padding: 3px 4px;
+      }
+      .crumb-sep {
+        color: var(--faint);
+        font-size: 12.5px;
+      }
+      .crumb-back {
+        margin-left: auto;
+        padding: 4px 11px;
+        font-size: 12px;
+      }
+      .slide svg [data-view] {
+        cursor: pointer;
+      }
+      .slide svg [data-view]:focus {
+        outline: none;
+      }
+      .slide svg [data-view]:focus-visible {
+        outline: 2px solid var(--chart-accent, #21557f);
+        outline-offset: 1px;
+      }
+      .slide svg .navpill {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.12s;
+      }
+      .slide svg g.lanehit:hover .navpill,
+      .slide svg .navpill:focus,
+      .slide svg .navpill:focus-within {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
       /* ---------- about popover ---------- */
       #aboutModal {
         margin: auto;
@@ -995,6 +1060,7 @@
             </h3>
             <div class="item-list" id="itemList"></div>
             <datalist id="laneList"></datalist>
+            <datalist id="subList"></datalist>
           </div>
         </div>
 
@@ -1090,6 +1156,7 @@
             <span class="lbl">Slide preview · 16:9</span>
             <span class="count" id="stageCount"></span>
           </div>
+          <nav class="crumbs" id="crumbs" aria-label="Plan scope"></nav>
           <div class="slide" id="slide">
             <div class="placeholder" id="placeholder">
               <b>No items yet</b>
@@ -1196,6 +1263,11 @@
                 <td>green, amber, red, blue or grey (the default)</td>
                 <td>amber</td>
               </tr>
+              <tr>
+                <td>Sub-lane</td>
+                <td>optional — the bands when you view a lane on its own</td>
+                <td>ERP</td>
+              </tr>
             </tbody>
           </table>
           <p>
@@ -1239,6 +1311,14 @@
             <b>Months</b> (working plans) or <b>Quarters</b> (board packs) —
             on long ranges, labels thin out evenly rather than collide.
           </p>
+          <p>
+            <b>View lane →</b> (hover or Tab to a lane name, or click a
+            "+ n more items" strip) re-draws the slide with just that lane —
+            its optional <b>Sub-lane</b> values become the bands, and items
+            without one sit in an unlabelled band at the top. The breadcrumb
+            above the slide takes you back to the <b>Whole plan</b> (or press
+            <b>Esc</b>).
+          </p>
         </section>
 
         <section class="gsec">
@@ -1277,7 +1357,8 @@
 
     <script>
       /* ================= state ================= */
-      let items = []; // {lane, item, start, end, status, row} — dates stay as typed, parsed at render
+      let items = []; // {lane, item, sub, start, end, status, row} — dates stay as typed, parsed at render
+      let scopeLane = null; // lane name when drilled in; null = Whole plan
       let settings = {
         title: "",
         theme: "marine",
@@ -1376,47 +1457,50 @@
       }
 
       /* The sample is the permanent regression fixture (CLAUDE.md checklist):
-   Technology's ten overlapping bars pin stacking + folding; Gate 2 and
-   Gate 3 share a date to pin milestone clustering; all four accepted date
-   formats appear. It must load with ZERO warnings — the warning paths
-   (impossible dates, end before start) are exercised by edge-case CSVs in
-   review, never by the boot sample. */
-      const SAMPLE = `Lane,Item,Start,End,Status
-Technology,Core platform assessment,02/02/2026,27/03/2026,
-Technology,ERP implementation,16/03/2026,18/12/2026,amber
-Technology,Data warehouse build,01/04/2026,30/10/2026,
-Technology,Cloud migration — wave 1,04/05/2026,28/08/2026,
-Technology,Identity & access rollout,Jun 2026,Nov 2026,
-Technology,Cyber uplift programme,2026-06-01,2027-04-30,green
-Technology,Legacy CRM decommission,Q3 2026,Q1 2027,
-Technology,Network refresh,13/07/2026,11/12/2026,
-Technology,Cloud migration — wave 2,01/09/2026,26/02/2027,
-Technology,Service desk re-platform,05/10/2026,26/03/2027,
-Technology,ERP go-live,04/01/2027,04/01/2027,
-People,Operating model design,09/02/2026,29/05/2026,
-People,Leadership hiring,Mar 2026,Aug 2026,
-People,Consultation & restructure,01/06/2026,30/09/2026,red
-Operations,Site consolidation review,16/02/2026,12/06/2026,
-Operations,Warehouse automation pilot,Q2 2026,Q4 2026,blue
-Operations,Process re-engineering,01/07/2026,31/03/2027,
-Operations,New DC operational,01/03/2027,,
-Finance,Chart of accounts redesign,02/03/2026,31/07/2026,
-Finance,Planning & reporting suite,01/08/2026,30/04/2027,
-Finance,Shared services transition,Q4 2026,Q2 2027,amber
-Finance,First close in new ledger,05/02/2027,,
-Commercial,Pricing review,06/04/2026,28/08/2026,
-Commercial,Digital channel launch,01/09/2026,18/12/2026,green
-Commercial,Key account programme,2027-01-04,2027-06-25,
-Governance,Programme mobilisation,02/02/2026,27/02/2026,
-Governance,Benefits tracking,02/03/2026,25/06/2027,
-Governance,Gate 1 — case approved,27/03/2026,,
-Governance,Gate 2 — design freeze,25/09/2026,,
-Governance,Gate 3 — readiness,25/09/2026,,`;
+   Technology's ten overlapping bars pin stacking + folding, and its
+   sub-lanes (ERP / Cyber / Infrastructure) cover every folded item so the
+   scoped view shows them all; the other lanes have no sub-lanes, pinning
+   the single-band scoped layout. Gate 2 and Gate 3 share a date to pin
+   milestone clustering; all four accepted date formats appear. It must
+   load with ZERO warnings — the warning paths (impossible dates, end
+   before start) are exercised by edge-case CSVs in review, never by the
+   boot sample. */
+      const SAMPLE = `Lane,Item,Start,End,Status,Sub-lane
+Technology,Core platform assessment,02/02/2026,27/03/2026,,ERP
+Technology,ERP implementation,16/03/2026,18/12/2026,amber,ERP
+Technology,Data warehouse build,01/04/2026,30/10/2026,,Infrastructure
+Technology,Cloud migration — wave 1,04/05/2026,28/08/2026,,Infrastructure
+Technology,Identity & access rollout,Jun 2026,Nov 2026,,Cyber
+Technology,Cyber uplift programme,2026-06-01,2027-04-30,green,Cyber
+Technology,Legacy CRM decommission,Q3 2026,Q1 2027,,ERP
+Technology,Network refresh,13/07/2026,11/12/2026,,Infrastructure
+Technology,Cloud migration — wave 2,01/09/2026,26/02/2027,,Infrastructure
+Technology,Service desk re-platform,05/10/2026,26/03/2027,,Infrastructure
+Technology,ERP go-live,04/01/2027,04/01/2027,,ERP
+People,Operating model design,09/02/2026,29/05/2026,,
+People,Leadership hiring,Mar 2026,Aug 2026,,
+People,Consultation & restructure,01/06/2026,30/09/2026,red,
+Operations,Site consolidation review,16/02/2026,12/06/2026,,
+Operations,Warehouse automation pilot,Q2 2026,Q4 2026,blue,
+Operations,Process re-engineering,01/07/2026,31/03/2027,,
+Operations,New DC operational,01/03/2027,,,
+Finance,Chart of accounts redesign,02/03/2026,31/07/2026,,
+Finance,Planning & reporting suite,01/08/2026,30/04/2027,,
+Finance,Shared services transition,Q4 2026,Q2 2027,amber,
+Finance,First close in new ledger,05/02/2027,,,
+Commercial,Pricing review,06/04/2026,28/08/2026,,
+Commercial,Digital channel launch,01/09/2026,18/12/2026,green,
+Commercial,Key account programme,2027-01-04,2027-06-25,,
+Governance,Programme mobilisation,02/02/2026,27/02/2026,,
+Governance,Benefits tracking,02/03/2026,25/06/2027,,
+Governance,Gate 1 — case approved,27/03/2026,,,
+Governance,Gate 2 — design freeze,25/09/2026,,,
+Governance,Gate 3 — readiness,25/09/2026,,,`;
 
-      const CSV_TEMPLATE = `Lane,Item,Start,End,Status
-Technology,ERP implementation,01/03/2026,18/12/2026,amber
-Technology,ERP go-live,04/01/2027,,
-People,Operating model design,Mar 2026,May 2026,`;
+      const CSV_TEMPLATE = `Lane,Item,Start,End,Status,Sub-lane
+Technology,ERP implementation,01/03/2026,18/12/2026,amber,ERP
+Technology,ERP go-live,04/01/2027,,,ERP
+People,Operating model design,Mar 2026,May 2026,,`;
 
       /* ================= helpers ================= */
       const $ = (s) => document.querySelector(s);
@@ -1500,13 +1584,16 @@ People,Operating model design,Mar 2026,May 2026,`;
         /* with a header row, columns are mapped by name so order doesn't matter;
      headerless files fall back to positional columns 1-5 */
         const HEADERS = {
-          lane: ["lane", "workstream", "track", "category"],
+          lane: ["lane", "track", "category"],
           item: ["item", "name", "title", "activity", "deliverable"],
           start: ["start", "start date", "from", "begin"],
           end: ["end", "end date", "finish", "finish date", "to", "due"],
           status: ["status", "rag", "colour", "color"],
+          sub: ["sub-lane", "sublane", "sub lane", "workstream"],
         };
-        const idx = { lane: 0, item: 1, start: 2, end: 3, status: 4 };
+        /* Sub-lane is header-mapped ONLY (idx.sub stays -1 without a header),
+           so plain five-column files can never hit it by position */
+        const idx = { lane: 0, item: 1, start: 2, end: 3, status: 4, sub: -1 };
         let first = 0;
         const h0 = rows[0].map(norm);
         if (
@@ -1545,6 +1632,7 @@ People,Operating model design,Mar 2026,May 2026,`;
           out.push({
             lane: cell(idx.lane),
             item: cell(idx.item),
+            sub: cell(idx.sub),
             start: cell(idx.start),
             end: cell(idx.end),
             status,
@@ -1637,7 +1725,8 @@ People,Operating model design,Mar 2026,May 2026,`;
         const lanes = [],
           byLane = new Map(),
           warnings = [];
-        let plotted = 0;
+        let plotted = 0,
+          seq = 0;
         const where = (it) =>
           (it.row ? `Row ${it.row} — ` : "") +
           `"${(it.item || "").trim() || "(unnamed)"}"` +
@@ -1686,7 +1775,13 @@ People,Operating model design,Mar 2026,May 2026,`;
             byLane.set(norm(laneName), lane);
             lanes.push(lane);
           }
-          const entry = { name: itemName, start, status: it.status || "" };
+          const entry = {
+            name: itemName,
+            start,
+            status: it.status || "",
+            sub: (it.sub || "").trim(),
+            seq: seq++,
+          };
           if (!end || +end === +start) lane.miles.push(entry);
           else lane.bars.push({ ...entry, end });
           plotted++;
@@ -1781,6 +1876,14 @@ People,Operating model design,Mar 2026,May 2026,`;
       }
       const byX = (a, b) => a.x1 - b.x1 || a.x2 - b.x2;
 
+      /* the slide title gains the scope; the base title stays editable and
+         export filenames inherit the whole thing */
+      function effectiveTitle() {
+        const base = settings.title.trim();
+        if (!scopeLane) return base;
+        return base ? base + " — " + scopeLane : scopeLane;
+      }
+
       let plottedCount = 0; // gates the export buttons
       function renderChart() {
         scheduleSave(); // every state change funnels through here
@@ -1793,7 +1896,17 @@ People,Operating model design,Mar 2026,May 2026,`;
         const model = buildModel(items);
         showWarnings(model.warnings);
         plottedCount = model.plotted;
+        /* a deleted or renamed scoped lane never strands the view — fall
+           back to the Whole plan */
+        if (
+          scopeLane &&
+          !model.lanes.some((l) => norm(l.name) === norm(scopeLane))
+        )
+          scopeLane = null;
+        renderCrumbs();
         if (!model.plotted) {
+          scopeLane = null;
+          renderCrumbs();
           updateExportUI();
           ph.style.display = "flex";
           $("#stageCount").textContent = "";
@@ -1801,13 +1914,62 @@ People,Operating model design,Mar 2026,May 2026,`;
           return;
         }
         ph.style.display = "none";
+        slide.style.setProperty(
+          "--chart-accent",
+          THEMES[settings.theme].accent,
+        );
         slide.classList.toggle("transparent", settings.transparent);
 
-        const r = composeSVG(model);
+        const r = composeSVG(model, true);
         slide.insertAdjacentHTML("beforeend", r.svg);
-        $("#stageCount").textContent =
-          `${model.plotted} item${model.plotted === 1 ? "" : "s"} · ${model.lanes.length} lane${model.lanes.length === 1 ? "" : "s"} · ${r.range}`;
+        $("#stageCount").textContent = scopeLane
+          ? `${scopeLane} · ${r.count} item${r.count === 1 ? "" : "s"} · ${r.range}`
+          : `${model.plotted} item${model.plotted === 1 ? "" : "s"} · ${model.lanes.length} lane${model.lanes.length === 1 ? "" : "s"} · ${r.range}`;
         updateExportUI();
+      }
+
+      /* ---- scope navigation: breadcrumb, drill-in, Esc/Back out ---- */
+      function renderCrumbs() {
+        const box = $("#crumbs");
+        box.innerHTML = "";
+        if (!scopeLane) {
+          const s = document.createElement("span");
+          s.className = "crumb-cur";
+          s.textContent = "Whole plan";
+          box.appendChild(s);
+          return;
+        }
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "crumb";
+        b.textContent = "Whole plan";
+        b.addEventListener("click", goWhole);
+        box.appendChild(b);
+        const sep = document.createElement("span");
+        sep.className = "crumb-sep";
+        sep.textContent = "/";
+        box.appendChild(sep);
+        const cur = document.createElement("span");
+        cur.className = "crumb-cur";
+        cur.textContent = scopeLane;
+        box.appendChild(cur);
+        const back = document.createElement("button");
+        back.type = "button";
+        back.className = "btn btn-line crumb-back";
+        back.textContent = "← Back";
+        back.title = "Back to the whole plan (Esc)";
+        back.addEventListener("click", goWhole);
+        box.appendChild(back);
+      }
+      function goWhole() {
+        if (!scopeLane) return;
+        scopeLane = null;
+        renderChart();
+      }
+      function viewLane(name) {
+        if (!name) return;
+        scopeLane = name;
+        renderChart();
       }
       /* unusable-row warnings track the CURRENT data, import or hand-edits alike */
       function showWarnings(list) {
@@ -1836,11 +1998,52 @@ People,Operating model design,Mar 2026,May 2026,`;
    Fitting may only ever scale content DOWN — a small plan renders at natural
    size, centred — and exports reuse this output verbatim, so they carry zero
    UI chrome. */
-      function composeSVG(model) {
+      /* the scoped lane's sub-lanes become the bands (first-appearance order,
+   no-sub items in one unlabelled band at the top); a lane with no sub-lanes
+   scopes to a single band. Band objects share the lane shape, so the whole
+   engine — axis, stacking, folding, milestones, toggles — applies as-is. */
+      function scopedBands(model) {
+        const lane = model.lanes.find(
+          (l) => norm(l.name) === norm(scopeLane),
+        );
+        if (!lane) return null;
+        const unl = { name: "", bars: [], miles: [] };
+        const subs = [],
+          byKey = new Map();
+        [
+          ...lane.bars.map((b) => ({ e: b, bar: true })),
+          ...lane.miles.map((m) => ({ e: m, bar: false })),
+        ]
+          .sort((a, b) => a.e.seq - b.e.seq)
+          .forEach(({ e, bar }) => {
+            const key = norm(e.sub);
+            let band = unl;
+            if (key) {
+              band = byKey.get(key);
+              if (!band) {
+                band = { name: e.sub, bars: [], miles: [] };
+                byKey.set(key, band);
+                subs.push(band);
+              }
+            }
+            (bar ? band.bars : band.miles).push(e);
+          });
+        return {
+          bands: (unl.bars.length + unl.miles.length ? [unl] : []).concat(
+            subs,
+          ),
+          count: lane.bars.length + lane.miles.length,
+        };
+      }
+
+      function composeSVG(model, nav) {
         const T = THEMES[settings.theme];
+        const scope = scopeLane ? scopedBands(model) : null;
+        const bands = scope ? scope.bands : model.lanes;
+        const count = scope ? scope.count : model.plotted;
         let minT = Infinity,
           maxT = -Infinity;
-        model.lanes.forEach((lane) => {
+        bands.forEach((lane) => {
           lane.bars.forEach((b) => {
             minT = Math.min(minT, +b.start);
             maxT = Math.max(maxT, +b.end);
@@ -1858,7 +2061,7 @@ People,Operating model design,Mar 2026,May 2026,`;
         /* ---- lane layout: stack overlapping items into sub-rows, then fold ---- */
         const laid = [];
         let contentH = 0;
-        model.lanes.forEach((lane, li) => {
+        bands.forEach((lane, li) => {
           const bars = lane.bars
             .map((b) => {
               const x1 = x(dayOf(b.start)),
@@ -1992,12 +2195,20 @@ People,Operating model design,Mar 2026,May 2026,`;
               fx1 = Math.max(0, Math.min(c - 55, L.plotW - 110));
               fx2 = fx1 + 110;
             }
+            /* in the Whole plan, the strip's only job is viewing: clicking
+               anywhere on it drills into its lane (attrs stripped on export) */
+            const drill = nav && !scope;
+            if (drill)
+              cp.push(
+                `<g data-view="${esc(La.lane.name)}" tabindex="0" role="button" aria-label="View ${esc(La.lane.name)} as its own slide">`,
+              );
             cp.push(
-              `<rect x="${fx1.toFixed(1)}" y="${fy.toFixed(1)}" width="${(fx2 - fx1).toFixed(1)}" height="${L.foldH - 6}" rx="5" fill="none" stroke="${T.line}" stroke-dasharray="4 3"/>`,
+              `<rect x="${fx1.toFixed(1)}" y="${fy.toFixed(1)}" width="${(fx2 - fx1).toFixed(1)}" height="${L.foldH - 6}" rx="5" fill="none" stroke="${T.line}" stroke-dasharray="4 3"${drill ? ' pointer-events="all"' : ""}/>`,
             );
             cp.push(
               `<text x="${((fx1 + fx2) / 2).toFixed(1)}" y="${(fy + (L.foldH - 6) / 2 + 3.5).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="600" fill="${T.sub}">+ ${La.hidden.length} more item${La.hidden.length === 1 ? "" : "s"}</text>`,
             );
+            if (drill) cp.push("</g>");
           }
           const msTop =
             topY + La.rows.length * L.rowH + (La.fold ? L.foldH : 0);
@@ -2013,9 +2224,32 @@ People,Operating model design,Mar 2026,May 2026,`;
               );
             });
           });
-          cp.push(
-            `<text x="${-L.gutter + 12}" y="${(La.y + La.h / 2 + 4.5).toFixed(1)}" font-size="12.5" font-weight="700" fill="${T.ink}">${esc(truncate(La.lane.name, 12.5, L.gutter - 26, 700))}</text>`,
-          );
+          /* band label: a lane name in the Whole plan, a sub-lane name when
+             scoped (the unlabelled band draws nothing). In the Whole plan the
+             label stays inert; hovering its gutter (or tabbing) reveals an
+             explicit "View lane →" pill — chrome only, never exported. */
+          const labelTxt = La.lane.name
+            ? `<text x="${-L.gutter + 12}" y="${(La.y + La.h / 2 + 4.5).toFixed(1)}" font-size="12.5" font-weight="700" fill="${T.ink}">${esc(truncate(La.lane.name, 12.5, L.gutter - 26, 700))}</text>`
+            : "";
+          if (nav && !scope && La.lane.name) {
+            const lbl = "View lane →";
+            measureCtx.font = "700 9.5px " + FONT;
+            const pw = Math.ceil(measureCtx.measureText(lbl).width) + 18,
+              phh = 19;
+            const px = -L.gutter + 12,
+              py = La.y + La.h / 2 + 9;
+            cp.push(`<g class="lanehit">`);
+            cp.push(
+              `<rect data-nav="1" x="${-L.gutter}" y="${La.y.toFixed(1)}" width="${L.gutter}" height="${La.h.toFixed(1)}" fill="none" pointer-events="all"/>`,
+            );
+            cp.push(labelTxt);
+            cp.push(
+              `<g class="navpill" data-nav="1" data-view="${esc(La.lane.name)}" tabindex="0" role="button" aria-label="View ${esc(La.lane.name)} as its own slide">` +
+                `<rect x="${px}" y="${py.toFixed(1)}" width="${pw}" height="${phh}" rx="${phh / 2}" fill="${T.accent}"/>` +
+                `<text x="${px + pw / 2}" y="${(py + 13).toFixed(1)}" text-anchor="middle" font-family="${FONT}" font-size="9.5" font-weight="700" fill="#FFFFFF">${lbl}</text>` +
+                `</g></g>`,
+            );
+          } else if (labelTxt) cp.push(labelTxt);
         });
 
         /* today line — over the bars; its tab joins it in the frame pass.
@@ -2036,7 +2270,7 @@ People,Operating model design,Mar 2026,May 2026,`;
         /* 16:9 frame fit from CHART CONTENT ONLY, reserving frame-proportional
      bands up top for the title and the axis labels. Fitting may only ever
      scale content DOWN, never up. */
-        const title = settings.title.trim();
+        const title = effectiveTitle();
         // transparent = chart only, for pasting onto branded slides: the
         // title goes with the background (its band is reclaimed too)
         const hasTitle = !!title && !settings.transparent;
@@ -2164,7 +2398,7 @@ People,Operating model design,Mar 2026,May 2026,`;
           );
         }
         parts.push(
-          `<text x="${(vx + vw - mx).toFixed(1)}" y="${(vy + vh - vw * 0.014).toFixed(1)}" text-anchor="end" font-family="${FONT}" font-size="${(vw * 0.0089).toFixed(1)}" fill="${T.sub}" opacity="0.85">${model.plotted} item${model.plotted === 1 ? "" : "s"}</text>`,
+          `<text x="${(vx + vw - mx).toFixed(1)}" y="${(vy + vh - vw * 0.014).toFixed(1)}" text-anchor="end" font-family="${FONT}" font-size="${(vw * 0.0089).toFixed(1)}" fill="${T.sub}" opacity="0.85">${count} item${count === 1 ? "" : "s"}</text>`,
         );
 
         const bg = settings.transparent
@@ -2173,6 +2407,8 @@ People,Operating model design,Mar 2026,May 2026,`;
         const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vx.toFixed(1)} ${vy.toFixed(1)} ${vw.toFixed(1)} ${vh.toFixed(1)}" font-family="${FONT}">${bg}${parts.join("")}</svg>`;
         return {
           svg,
+          count,
+          bands: bands.length,
           range: fmtMonth(new Date(minT)) + " – " + fmtMonth(new Date(maxT)),
         };
       }
@@ -2195,7 +2431,8 @@ People,Operating model design,Mar 2026,May 2026,`;
           card.innerHTML = `
       <div class="grid">
         <input type="text" class="full" value="${esc(p.item)}" placeholder="Item" aria-label="Item" data-f="item">
-        <input type="text" class="full" value="${esc(p.lane)}" placeholder="Lane" aria-label="Lane" data-f="lane" list="laneList">
+        <input type="text" value="${esc(p.lane)}" placeholder="Lane" aria-label="Lane" data-f="lane" list="laneList">
+        <input type="text" value="${esc(p.sub || "")}" placeholder="Sub-lane (optional)" aria-label="Sub-lane" data-f="sub" list="subList">
         <input type="text" value="${esc(p.start)}" placeholder="Start — 01/03/2026" aria-label="Start" data-f="start">
         <input type="text" value="${esc(p.end)}" placeholder="End — blank = milestone" aria-label="End" data-f="end">
         <div class="tagrow">
@@ -2210,6 +2447,23 @@ People,Operating model design,Mar 2026,May 2026,`;
               renderChart();
             });
           });
+          /* sub-lane suggestions come from THIS item's lane only */
+          card
+            .querySelector('input[data-f="sub"]')
+            .addEventListener("focus", () => {
+              const dl = $("#subList");
+              dl.innerHTML = "";
+              const seen = new Set();
+              items.forEach((q) => {
+                if (norm(q.lane) !== norm(p.lane)) return;
+                const k = norm(q.sub);
+                if (!k || seen.has(k)) return;
+                seen.add(k);
+                const o = document.createElement("option");
+                o.value = q.sub.trim();
+                dl.appendChild(o);
+              });
+            });
           card.querySelectorAll(".tagdot").forEach((d) =>
             d.addEventListener("click", () => {
               p.status = d.dataset.c === "grey" ? "" : d.dataset.c;
@@ -2232,10 +2486,24 @@ People,Operating model design,Mar 2026,May 2026,`;
       function currentSVG() {
         return $("#slide svg");
       }
-      /* composeSVG output is already chart-only (no UI chrome ever enters the
-   SVG), so exporting is a straight serialisation of the live slide */
+      /* Exports must contain the chart only: drop the "View lane →" pills and
+   gutter hit-areas, strip the interactivity attributes off fold strips
+   (their visuals ARE chart content) */
       function cleanSVGString(svgEl) {
-        return svgEl.outerHTML;
+        const c = svgEl.cloneNode(true);
+        c.querySelectorAll("[data-nav]").forEach((el) => el.remove());
+        c.querySelectorAll("[data-view]").forEach((el) => {
+          ["data-view", "tabindex", "role", "aria-label"].forEach((a) =>
+            el.removeAttribute(a),
+          );
+        });
+        c.querySelectorAll("[pointer-events]").forEach((el) =>
+          el.removeAttribute("pointer-events"),
+        );
+        c.querySelectorAll("[class]").forEach((el) =>
+          el.removeAttribute("class"),
+        );
+        return c.outerHTML;
       }
       function svgToPngBlob(svgStr) {
         return new Promise((resolve, reject) => {
@@ -2287,7 +2555,7 @@ People,Operating model design,Mar 2026,May 2026,`;
           .replace(/^-|-$/g, "");
       }
       function fileStem() {
-        return slugify(settings.title) || "timelane-plan";
+        return slugify(effectiveTitle()) || "timelane-plan";
       }
       /* ---- export actions; all are reached only via the header Export split button ---- */
       function exportCurrentPNG() {
@@ -2310,11 +2578,16 @@ People,Operating model design,Mar 2026,May 2026,`;
       function itemsToCSV() {
         const q = (s) =>
           /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+        /* the Sub-lane column is written only when somebody actually uses it */
+        const anySub = items.some((p) => (p.sub || "").trim());
         return (
-          "Lane,Item,Start,End,Status\n" +
+          "Lane,Item,Start,End,Status" +
+          (anySub ? ",Sub-lane" : "") +
+          "\n" +
           items
             .map((p) =>
               [p.lane, p.item, p.start, p.end, p.status]
+                .concat(anySub ? [p.sub || ""] : [])
                 .map((x) => q(x || ""))
                 .join(","),
             )
@@ -2460,6 +2733,7 @@ People,Operating model design,Mar 2026,May 2026,`;
         items.push({
           lane: items.length ? items[items.length - 1].lane : "",
           item: "",
+          sub: "",
           start: "",
           end: "",
           status: "",
@@ -2522,6 +2796,19 @@ People,Operating model design,Mar 2026,May 2026,`;
         renderChart();
       });
 
+      /* drill-down: delegated, since the SVG is rebuilt on every render */
+      $("#slide").addEventListener("click", (e) => {
+        const g = e.target.closest("[data-view]");
+        if (g) viewLane(g.getAttribute("data-view"));
+      });
+      $("#slide").addEventListener("keydown", (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        const g = e.target.closest("[data-view]");
+        if (g) {
+          e.preventDefault();
+          viewLane(g.getAttribute("data-view"));
+        }
+      });
       document.addEventListener("keydown", (e) => {
         if (e.key !== "Escape") return;
         const em = $("#exportMenu");
@@ -2529,7 +2816,12 @@ People,Operating model design,Mar 2026,May 2026,`;
           // Esc closes the export menu before anything else
           em.hidden = true;
           $("#btnExportMore").setAttribute("aria-expanded", "false");
+          return;
         }
+        if (!scopeLane) return;
+        if (document.querySelector("dialog[open]")) return; // Esc closes the dialog (native), not the scope
+        if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+        goWhole();
       });
 
       /* about popover — native <dialog>: Esc + backdrop come for free */
@@ -2608,7 +2900,10 @@ People,Operating model design,Mar 2026,May 2026,`;
       function saveState() {
         if (!store) return;
         try {
-          store.setItem(SAVE_KEY, JSON.stringify({ v: 1, items, settings }));
+          store.setItem(
+            SAVE_KEY,
+            JSON.stringify({ v: 1, items, settings, scope: scopeLane || "" }),
+          );
         } catch (e) {
           /* quota / races: autosave must never break the app */
         }
@@ -2625,6 +2920,7 @@ People,Operating model design,Mar 2026,May 2026,`;
             .map((p) => ({
               lane: String(p.lane ?? ""),
               item: String(p.item ?? ""),
+              sub: String(p.sub ?? ""),
               start: String(p.start ?? ""),
               end: String(p.end ?? ""),
               status: STATUS[p.status] ? p.status : "",
@@ -2645,6 +2941,8 @@ People,Operating model design,Mar 2026,May 2026,`;
               milestones: st.milestones !== false,
               transparent: !!st.transparent,
             },
+            // a stale scope is harmless: renderChart falls back to Whole plan
+            scope: typeof s.scope === "string" ? s.scope : "",
           };
         } catch (e) {
           // corrupt state: discard it and boot the sample — never a broken boot
@@ -2668,6 +2966,7 @@ People,Operating model design,Mar 2026,May 2026,`;
         );
       }
       function loadSampleFresh() {
+        scopeLane = null;
         $("#csvBox").value = SAMPLE;
         applyCSV(SAMPLE);
         $("#titleBox").value = "Meridian Group — transformation plan on a page";
@@ -2689,6 +2988,7 @@ People,Operating model design,Mar 2026,May 2026,`;
         $("#restoreBar").hidden = true;
         $("#csvStatus").className = "status";
         items = [];
+        scopeLane = null;
         $("#csvBox").value = "";
         settings.title = "";
         $("#titleBox").value = "";
@@ -2707,6 +3007,7 @@ People,Operating model design,Mar 2026,May 2026,`;
       if (savedState) {
         items = savedState.items;
         settings = savedState.settings;
+        scopeLane = savedState.scope || null;
         // the Import box always mirrors the restored plan, ready to edit
         $("#csvBox").value = items.length ? itemsToCSV() : "";
         syncControls();

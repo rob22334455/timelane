@@ -58,6 +58,11 @@ name their concepts here before adding UI:
 
 - "lane" — a horizontal workstream band (never "swimlane",
   "stream", "row")
+- "sub-lane" — a band within a scoped lane view (optional
+  Sub-lane CSV column; never affects the whole-plan layout)
+- "View lane" — the drill-down affordance on lane labels and
+  "+ n more items" strips
+- "Whole plan" — the unscoped view; the breadcrumb's first step
 - "item" — a bar with a start and end (never "task", "activity")
 - "milestone" — a single-date diamond
 - "status" — the colour: green / amber / red / blue / grey
@@ -108,8 +113,16 @@ item:
     forced unit, labels thin evenly and never collide, year
     markers ("Jan '27") survive thinning, bars don't move
     (except the padded coarser-than-range case); Auto identical
-    to unforced behaviour. When v2 lane drill-down lands, repeat
-    in one scoped view.
+    to unforced behaviour. Repeat one forced unit in a scoped
+    lane view.
+11. Sub-plans: a scoped lane WITH sub-lanes (bands in first-
+    appearance order, unlabelled band on top, axis recomputed,
+    whole-plan folded items all visible) and one WITHOUT (single
+    band); a scoped view with each Slide toggle off; scoped
+    SVG/PNG exports (scoped title and footer, zero nav chrome);
+    scope restored after refresh; deleting or renaming the
+    scoped lane falls back to the Whole plan, never a stranded
+    view.
 
 ## The sample must permanently exercise every checklist case
 that renders on a clean slide (crowding/folding, milestone
@@ -121,5 +134,6 @@ rows in the sample.
 ## Decided, do not revisit without the user
 
 - Dependency arrows: never (see Hard rules). Sequence is position.
-- Sub-plans: planned for v2 — optional "Sub-lane" CSV column,
-  lane drill-down mirroring Orgami's View team pattern. Not in v1.
+- Sub-plans: shipped — optional "Sub-lane" CSV column, lane
+  drill-down mirroring Orgami's View team pattern; one level
+  only (no drilling into sub-lanes).
