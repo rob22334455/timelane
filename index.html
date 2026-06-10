@@ -518,6 +518,38 @@
         text-align: center;
         color: var(--ink-2);
       }
+      .segrow {
+        display: flex;
+      }
+      .seg {
+        flex: 1;
+        font-family: var(--ui);
+        font-size: 12.5px;
+        font-weight: 600;
+        padding: 7px 0;
+        background: #fff;
+        color: var(--ink-2);
+        border: 1px solid var(--hair);
+        cursor: pointer;
+      }
+      .seg + .seg {
+        border-left: none;
+      }
+      .seg:first-child {
+        border-radius: 6px 0 0 6px;
+      }
+      .seg:last-child {
+        border-radius: 0 6px 6px 0;
+      }
+      .seg[aria-pressed="true"] {
+        background: var(--ink);
+        border-color: var(--ink);
+        color: #fff;
+      }
+      .seg:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: -1px;
+      }
       .chk {
         display: flex;
         align-items: center;
@@ -1000,6 +1032,30 @@
             </div>
           </div>
           <div class="sec">
+            <h3>Axis</h3>
+            <div class="segrow" role="group" aria-label="Axis units">
+              <button type="button" class="seg" data-u="auto" aria-pressed="true">
+                Auto
+              </button>
+              <button
+                type="button"
+                class="seg"
+                data-u="months"
+                aria-pressed="false"
+              >
+                Months
+              </button>
+              <button
+                type="button"
+                class="seg"
+                data-u="quarters"
+                aria-pressed="false"
+              >
+                Quarters
+              </button>
+            </div>
+          </div>
+          <div class="sec">
             <h3>Detail</h3>
             <label class="chk"
               ><input type="checkbox" id="chkToday" checked /> Show the today
@@ -1177,6 +1233,12 @@
             strip. Adjust the limit with <b>Rows shown per lane</b>
             on the Slide tab.
           </p>
+          <p>
+            The axis picks weeks, months or quarters to suit your date range.
+            The <b>Axis</b> control on the Slide tab can force
+            <b>Months</b> (working plans) or <b>Quarters</b> (board packs) —
+            on long ranges, labels thin out evenly rather than collide.
+          </p>
         </section>
 
         <section class="gsec">
@@ -1220,6 +1282,7 @@
         title: "",
         theme: "marine",
         maxRows: 4,
+        axis: "auto", // "auto" | "months" | "quarters"
         today: true,
         foldStrip: true,
         milestones: true,
@@ -1656,17 +1719,41 @@ People,Operating model design,Mar 2026,May 2026,`;
           d.getUTCMonth() + (unit === "months" ? 1 : 3 - (d.getUTCMonth() % 3));
         return mkDate(d.getUTCFullYear() + Math.floor(m / 12), m % 12, 1);
       }
-      /* units auto-select so gridlines and labels stay clean at any range:
-   up to ~16 weeks → weeks; up to ~21 months → months; beyond → quarters */
+      /* Auto units keep gridlines and labels clean at any range: up to ~16
+   weeks → weeks; up to ~21 months → months; beyond → quarters. The Axis
+   control can force months or quarters; the DOMAIN still snaps to the auto
+   unit, so forcing a unit never moves a bar — it changes only which
+   gridlines and labels are drawn. One exception: a forced unit coarser than
+   the whole range pads the domain out to unit boundaries, so the axis is
+   never unitless. */
       function buildAxis(min, max) {
         const span = (+max - +min) / DAY;
-        const unit =
+        const auto =
           span <= 115 ? "weeks" : span <= 640 ? "months" : "quarters";
-        const d0 = floorUnit(min, unit);
-        const d1 = nextUnit(floorUnit(max, unit), unit);
-        const cells = [];
-        for (let t = d0; +t < +d1; t = nextUnit(t, unit)) cells.push(t);
-        return { unit, d0, d1, cells };
+        const unit = settings.axis === "auto" ? auto : settings.axis;
+        let d0 = floorUnit(min, auto);
+        let d1 = nextUnit(floorUnit(max, auto), auto);
+        const interior = (a, b) => {
+          const out = [];
+          for (
+            let t = nextUnit(floorUnit(a, unit), unit);
+            +t < +b;
+            t = nextUnit(t, unit)
+          )
+            out.push(t);
+          return out;
+        };
+        let mids = interior(d0, d1);
+        if (mids.length < 2) {
+          d0 = floorUnit(min, unit);
+          d1 = nextUnit(floorUnit(max, unit), unit);
+          mids = interior(d0, d1);
+          while (mids.length < 2) {
+            d1 = nextUnit(d1, unit);
+            mids = interior(d0, d1);
+          }
+        }
+        return { unit, d0, d1, marks: [d0, ...mids, d1] };
       }
       function cellLabel(d, unit, withYear) {
         const y = d.getUTCFullYear(),
@@ -1848,10 +1935,11 @@ People,Operating model design,Mar 2026,May 2026,`;
               `<rect x="${-L.gutter}" y="${La.y.toFixed(1)}" width="${L.gutter + L.plotW}" height="${La.h.toFixed(1)}" fill="${T.tint}" opacity="0.55"/>`,
             );
         });
-        axis.cells.forEach((c, i) => {
-          if (i)
-            cp.push(seg(T.line, x(dayOf(c)), 0, x(dayOf(c)), contentH, 1, 0.6));
-        });
+        axis.marks
+          .slice(1, -1)
+          .forEach((c) =>
+            cp.push(seg(T.line, x(dayOf(c)), 0, x(dayOf(c)), contentH, 1, 0.6)),
+          );
         cp.push(seg(T.line, 0, 0, 0, contentH, 1));
         cp.push(seg(T.line, L.plotW, 0, L.plotW, contentH, 1));
         cp.push(seg(T.border, -L.gutter, 0, L.plotW, 0, 1.2));
@@ -1971,25 +2059,83 @@ People,Operating model design,Mar 2026,May 2026,`;
      bottom-right, all sized by the FRAME so they are visually identical for
      every plan; never part of chart bounds or zoom */
         const axFs = vw * 0.0095;
-        const fits = (s, cw) => {
+        const labW = (s) => {
           measureCtx.font = "600 " + axFs + "px " + FONT;
-          return measureCtx.measureText(s).width <= cw - 6;
+          return measureCtx.measureText(s).width;
         };
-        axis.cells.forEach((c, i) => {
-          const cx1 = x(dayOf(c)),
-            cx2 = x(dayOf(nextUnit(c, axis.unit)));
-          const wantYear =
-            i === 0 || (axis.unit !== "weeks" && c.getUTCMonth() === 0);
-          let lab = cellLabel(c, axis.unit, wantYear);
-          if (!fits(lab, cx2 - cx1) && wantYear)
-            lab = lab.replace(/ \d\d(\d\d)$/, " ’$1"); // "Feb 2026" → "Feb ’26"
-          if (!fits(lab, cx2 - cx1)) lab = cellLabel(c, axis.unit, false);
-          if (!fits(lab, cx2 - cx1) && i % 2 === 1) lab = ""; // thin out, never collide
-          if (lab)
-            parts.push(
-              `<text x="${((cx1 + cx2) / 2).toFixed(1)}" y="${(-axFs * 0.7).toFixed(1)}" text-anchor="middle" font-family="${FONT}" font-size="${axFs.toFixed(1)}" font-weight="600" fill="${T.sub}">${esc(lab)}</text>`,
+        /* axis label segments sit between marks; a segment takes the unit its
+           midpoint falls in, so partial edge cells (a forced unit against an
+           auto-snapped domain) still name the right month/quarter */
+        const segsAx = [];
+        for (let i = 0; i < axis.marks.length - 1; i++) {
+          const a = axis.marks[i],
+            b = axis.marks[i + 1];
+          const u = floorUnit(new Date((+a + +b) / 2), axis.unit);
+          const x1 = x(dayOf(a)),
+            x2 = x(dayOf(b));
+          const fullW =
+            x(dayOf(nextUnit(u, axis.unit))) - x(dayOf(u));
+          segsAx.push({
+            cx: (x1 + x2) / 2,
+            w: x2 - x1,
+            u,
+            partial: x2 - x1 < fullW * 0.55,
+          });
+        }
+        /* year markers always survive thinning; quarter axes with few cells
+           carry the year on every label ("Q3 ’26") */
+        const isMark = (sg, i) =>
+          i === 0 || (axis.unit !== "weeks" && sg.u.getUTCMonth() === 0);
+        const allYears = axis.unit === "quarters" && segsAx.length <= 6;
+        const textFor = (sg, i) => {
+          let lab = cellLabel(sg.u, axis.unit, isMark(sg, i) || allYears);
+          if (labW(lab) > sg.w - 6)
+            lab = lab.replace(/ \d\d(\d\d)$/, " ’$1"); // "Jan 2027" → "Jan ’27"
+          if (labW(lab) > sg.w - 6 && !isMark(sg, i) && !allYears)
+            lab = cellLabel(sg.u, axis.unit, false);
+          return lab;
+        };
+        /* thin labels evenly until nothing can collide; strides divide the
+           year, so year markers always land on the kept grid */
+        const strides =
+          axis.unit === "months"
+            ? [1, 2, 3, 4, 6, 12]
+            : axis.unit === "quarters"
+              ? [1, 2, 4]
+              : [1, 2, 3];
+        const firstMark = segsAx.findIndex((sg, i) => i > 0 && isMark(sg, i));
+        const drawnAt = (k) => {
+          const phase = firstMark > 0 ? firstMark % k : 0;
+          return segsAx
+            .map((sg, i) => ({ sg, i, lab: textFor(sg, i) }))
+            .filter(
+              (d) =>
+                (d.i % k === phase || isMark(d.sg, d.i)) &&
+                (!d.sg.partial || isMark(d.sg, d.i)),
             );
-        });
+        };
+        let drawn = drawnAt(strides[strides.length - 1]);
+        for (const k of strides) {
+          const cand = drawnAt(k);
+          let ok = true;
+          for (let j = 1; j < cand.length; j++) {
+            const a = cand[j - 1],
+              b = cand[j];
+            if ((labW(a.lab) + labW(b.lab)) / 2 + 6 > b.sg.cx - a.sg.cx) {
+              ok = false;
+              break;
+            }
+          }
+          if (ok) {
+            drawn = cand;
+            break;
+          }
+        }
+        drawn.forEach((d) =>
+          parts.push(
+            `<text x="${d.sg.cx.toFixed(1)}" y="${(-axFs * 0.7).toFixed(1)}" text-anchor="middle" font-family="${FONT}" font-size="${axFs.toFixed(1)}" font-weight="600" fill="${T.sub}">${esc(d.lab)}</text>`,
+          ),
+        );
         if (todayX !== null) {
           const tabFs = vw * 0.0082;
           measureCtx.font = "700 " + tabFs + "px " + FONT;
@@ -2346,6 +2492,19 @@ People,Operating model design,Mar 2026,May 2026,`;
         $("#maxRowsVal").textContent = e.target.value;
         renderChart();
       });
+      const syncAxisSeg = () =>
+        document
+          .querySelectorAll(".seg")
+          .forEach((x) =>
+            x.setAttribute("aria-pressed", x.dataset.u === settings.axis),
+          );
+      document.querySelectorAll(".seg").forEach((b) =>
+        b.addEventListener("click", () => {
+          settings.axis = b.dataset.u;
+          syncAxisSeg();
+          renderChart();
+        }),
+      );
       $("#chkToday").addEventListener("change", (e) => {
         settings.today = e.target.checked;
         renderChart();
@@ -2478,6 +2637,9 @@ People,Operating model design,Mar 2026,May 2026,`;
               title: String(st.title ?? ""),
               theme: THEMES[st.theme] ? st.theme : "marine",
               maxRows: Math.min(8, Math.max(2, +st.maxRows || 4)),
+              axis: ["months", "quarters"].includes(st.axis)
+                ? st.axis
+                : "auto",
               today: st.today !== false,
               foldStrip: st.foldStrip !== false,
               milestones: st.milestones !== false,
@@ -2496,6 +2658,7 @@ People,Operating model design,Mar 2026,May 2026,`;
         $("#titleBox").value = settings.title;
         $("#maxRows").value = settings.maxRows;
         $("#maxRowsVal").textContent = settings.maxRows;
+        syncAxisSeg();
         $("#chkToday").checked = settings.today;
         $("#chkFoldStrip").checked = settings.foldStrip;
         $("#chkMilestones").checked = settings.milestones;

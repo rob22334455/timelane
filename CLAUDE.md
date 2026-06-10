@@ -62,6 +62,10 @@ name their concepts here before adding UI:
 - "milestone" — a single-date diamond
 - "status" — the colour: green / amber / red / blue / grey
 - "today line" — the vertical current-date marker
+- "axis" — the time scale; the Axis control (Slide tab) offers
+  exactly "Auto", "Months", "Quarters" — Auto picks weeks /
+  months / quarters from the range, forced units affect gridlines
+  and labels only (bars never move)
 - "fold" / "+ n more items" — lane overflow behaviour
 - "slide" — what you see and export
 - "Show folded items strip" — Slide-tab toggle; off hides the
@@ -99,6 +103,13 @@ item:
 8. Transparent export: PNG alpha background and SVG with no
    background rect — bars/text legible, no white fringing
 9. Today line on, off, and out of range (hidden without error)
+10. Axis control: Months and Quarters each forced on the
+    long-range AND short-range cases — gridlines hold to the
+    forced unit, labels thin evenly and never collide, year
+    markers ("Jan '27") survive thinning, bars don't move
+    (except the padded coarser-than-range case); Auto identical
+    to unforced behaviour. When v2 lane drill-down lands, repeat
+    in one scoped view.
 
 ## The sample must permanently exercise every checklist case
 that renders on a clean slide (crowding/folding, milestone
