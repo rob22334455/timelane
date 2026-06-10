@@ -93,7 +93,12 @@ item:
    background rect — bars/text legible, no white fringing
 9. Today line on, off, and out of range (hidden without error)
 
-## The sample must permanently exercise every checklist case.
+## The sample must permanently exercise every checklist case
+that renders on a clean slide (crowding/folding, milestone
+clusters, all four date formats, today line). It must load with
+ZERO warnings — the warning cases in item 7 are verified with
+throwaway edge-case CSVs at review time, never by shipping broken
+rows in the sample.
 
 ## Decided, do not revisit without the user
 
