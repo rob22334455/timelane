@@ -1194,10 +1194,11 @@
             <b>Your data</b> — <b>CSV</b>, reopen or edit later.
           </p>
           <p>
-            <b>Transparent background</b> on the Slide tab puts nothing behind
-            the chart — the preview shows a checkerboard (never exported), the
-            PNG gets an alpha background and the SVG loses its background
-            rectangle — for pasting straight onto branded slide templates.
+            <b>Transparent background</b> on the Slide tab drops the title and
+            puts nothing behind the chart — the preview shows a checkerboard
+            (never exported), the PNG gets an alpha background and the SVG
+            loses its background rectangle — for pasting straight onto branded
+            slide templates.
           </p>
         </section>
 
@@ -1948,7 +1949,9 @@ People,Operating model design,Mar 2026,May 2026,`;
      bands up top for the title and the axis labels. Fitting may only ever
      scale content DOWN, never up. */
         const title = settings.title.trim();
-        const hasTitle = !!title;
+        // transparent = chart only, for pasting onto branded slides: the
+        // title goes with the background (its band is reclaimed too)
+        const hasTitle = !!title && !settings.transparent;
         const chartL = -L.gutter;
         const chartW = L.gutter + L.plotW;
         const pad = Math.max(40, chartW * 0.035);
