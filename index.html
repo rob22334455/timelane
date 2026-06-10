@@ -793,6 +793,7 @@
       .gsec h3 {
         font-size: 11px;
         font-weight: 700;
+
         letter-spacing: 0.8px;
         text-transform: uppercase;
         color: var(--sub);
@@ -1108,7 +1109,12 @@
           <div class="sec">
             <h3>Axis</h3>
             <div class="segrow" role="group" aria-label="Axis units">
-              <button type="button" class="seg" data-u="auto" aria-pressed="true">
+              <button
+                type="button"
+                class="seg"
+                data-u="auto"
+                aria-pressed="true"
+              >
                 Auto
               </button>
               <button
@@ -1316,16 +1322,15 @@
           <p>
             The axis picks weeks, months or quarters to suit your date range.
             The <b>Axis</b> control on the Slide tab can force
-            <b>Months</b> (working plans) or <b>Quarters</b> (board packs) —
-            on long ranges, labels thin out evenly rather than collide.
+            <b>Months</b> (working plans) or <b>Quarters</b> (board packs) — on
+            long ranges, labels thin out evenly rather than collide.
           </p>
           <p>
-            <b>View lane →</b> (hover or Tab to a lane name, or click a
-            "+ n more items" strip) re-draws the slide with just that lane —
-            its optional <b>Sub-lane</b> values become the bands, and items
-            without one sit in an unlabelled band at the top. The breadcrumb
-            above the slide takes you back to the <b>Whole plan</b> (or press
-            <b>Esc</b>).
+            <b>View lane →</b> (hover or Tab to a lane name, or click a "+ n
+            more items" strip) re-draws the slide with just that lane — its
+            optional <b>Sub-lane</b> values become the bands, and items without
+            one sit in an unlabelled band at the top. The breadcrumb above the
+            slide takes you back to the <b>Whole plan</b> (or press <b>Esc</b>).
           </p>
         </section>
 
@@ -1346,9 +1351,9 @@
           <p>
             <b>Transparent background</b> on the Slide tab drops the title and
             puts nothing behind the chart — the preview shows a checkerboard
-            (never exported), the PNG gets an alpha background and the SVG
-            loses its background rectangle — for pasting straight onto branded
-            slide templates.
+            (never exported), the PNG gets an alpha background and the SVG loses
+            its background rectangle — for pasting straight onto branded slide
+            templates.
           </p>
         </section>
 
@@ -2011,9 +2016,7 @@ People,Operating model design,Mar 2026,May 2026,,`;
    scopes to a single band. Band objects share the lane shape, so the whole
    engine — axis, stacking, folding, milestones, toggles — applies as-is. */
       function scopedBands(model) {
-        const lane = model.lanes.find(
-          (l) => norm(l.name) === norm(scopeLane),
-        );
+        const lane = model.lanes.find((l) => norm(l.name) === norm(scopeLane));
         if (!lane) return null;
         const unl = { name: "", bars: [], miles: [] };
         const subs = [],
@@ -2037,9 +2040,7 @@ People,Operating model design,Mar 2026,May 2026,,`;
             (bar ? band.bars : band.miles).push(e);
           });
         return {
-          bands: (unl.bars.length + unl.miles.length ? [unl] : []).concat(
-            subs,
-          ),
+          bands: (unl.bars.length + unl.miles.length ? [unl] : []).concat(subs),
           count: lane.bars.length + lane.miles.length,
         };
       }
@@ -2315,8 +2316,7 @@ People,Operating model design,Mar 2026,May 2026,,`;
           const u = floorUnit(new Date((+a + +b) / 2), axis.unit);
           const x1 = x(dayOf(a)),
             x2 = x(dayOf(b));
-          const fullW =
-            x(dayOf(nextUnit(u, axis.unit))) - x(dayOf(u));
+          const fullW = x(dayOf(nextUnit(u, axis.unit))) - x(dayOf(u));
           segsAx.push({
             cx: (x1 + x2) / 2,
             w: x2 - x1,
@@ -2331,8 +2331,7 @@ People,Operating model design,Mar 2026,May 2026,,`;
         const allYears = axis.unit === "quarters" && segsAx.length <= 6;
         const textFor = (sg, i) => {
           let lab = cellLabel(sg.u, axis.unit, isMark(sg, i) || allYears);
-          if (labW(lab) > sg.w - 6)
-            lab = lab.replace(/ \d\d(\d\d)$/, " ’$1"); // "Jan 2027" → "Jan ’27"
+          if (labW(lab) > sg.w - 6) lab = lab.replace(/ \d\d(\d\d)$/, " ’$1"); // "Jan 2027" → "Jan ’27"
           if (labW(lab) > sg.w - 6 && !isMark(sg, i) && !allYears)
             lab = cellLabel(sg.u, axis.unit, false);
           return lab;
@@ -2941,9 +2940,7 @@ People,Operating model design,Mar 2026,May 2026,,`;
               title: String(st.title ?? ""),
               theme: THEMES[st.theme] ? st.theme : "marine",
               maxRows: Math.min(8, Math.max(2, +st.maxRows || 4)),
-              axis: ["months", "quarters"].includes(st.axis)
-                ? st.axis
-                : "auto",
+              axis: ["months", "quarters"].includes(st.axis) ? st.axis : "auto",
               today: st.today !== false,
               foldStrip: st.foldStrip !== false,
               milestones: st.milestones !== false,
