@@ -2260,8 +2260,14 @@ People,Operating model design,Mar 2026,May 2026,`;
         if (last) last.querySelector("input")?.focus();
       });
       /* one button, one promise: wipe whatever's there and restore the demo
-         plan (the label says exactly that, so no confirm step) */
+         plan — confirmed, because it replaces the user's work */
       $("#btnClear").addEventListener("click", () => {
+        if (
+          !confirm(
+            "Clear all and load the sample? This replaces the current plan.",
+          )
+        )
+          return;
         items = [];
         loadSampleFresh();
       });
