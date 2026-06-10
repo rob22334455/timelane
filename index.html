@@ -1251,9 +1251,9 @@
       /* The sample is the permanent regression fixture (CLAUDE.md checklist):
    Technology's ten overlapping bars pin stacking + folding; Gate 2 and
    Gate 3 share a date to pin milestone clustering; all four accepted date
-   formats appear; "Quantum pilot" (impossible date) and "Forklift
-   replacement" (ends before it starts) keep the import warnings honest —
-   the warning on Load sample is deliberate. */
+   formats appear. It must load with ZERO warnings — the warning paths
+   (impossible dates, end before start) are exercised by edge-case CSVs in
+   review, never by the boot sample. */
       const SAMPLE = `Lane,Item,Start,End,Status
 Technology,Core platform assessment,02/02/2026,27/03/2026,
 Technology,ERP implementation,16/03/2026,18/12/2026,amber
@@ -1266,7 +1266,6 @@ Technology,Network refresh,13/07/2026,11/12/2026,
 Technology,Cloud migration — wave 2,01/09/2026,26/02/2027,
 Technology,Service desk re-platform,05/10/2026,26/03/2027,
 Technology,ERP go-live,04/01/2027,04/01/2027,
-Technology,Quantum pilot,31/02/2026,30/06/2026,
 People,Operating model design,09/02/2026,29/05/2026,
 People,Leadership hiring,Mar 2026,Aug 2026,
 People,Consultation & restructure,01/06/2026,30/09/2026,red
