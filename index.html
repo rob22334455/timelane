@@ -906,7 +906,9 @@
               <button class="btn btn-line" id="btnClear">
                 Clear all and load sample
               </button>
-              <button class="btn btn-line" id="btnFresh">Start fresh</button>
+              <button class="btn btn-line" id="btnFresh">
+                Clear all data and start fresh
+              </button>
             </div>
           </div>
 
@@ -1014,7 +1016,7 @@
         </p>
         <p>
           Your plan is saved in your browser on this device so you don't lose
-          work — use Start fresh to remove it.
+          work — use Clear all data and start fresh to remove it.
         </p>
       </div>
     </dialog>
@@ -1098,7 +1100,8 @@
           </p>
           <p>
             Your plan is saved in your browser on this device so you don't
-            lose work — use <b>Start fresh</b> to remove it.
+            lose work — use <b>Clear all data and start fresh</b> to remove
+            it.
           </p>
           <p>
             <button class="btn btn-sec" id="btnTemplate">
@@ -2425,10 +2428,12 @@ People,Operating model design,Mar 2026,May 2026,`;
         settings.title = $("#titleBox").value;
         renderChart();
       }
+      /* a true blank slate: wipes the plan AND the on-device save; theme and
+         display settings are cosmetic preferences and survive */
       function startFresh() {
         if (
           !confirm(
-            "Start fresh? This clears the plan saved on this device and loads the sample.",
+            "Start fresh? This wipes the plan, including the copy saved on this device.",
           )
         )
           return;
@@ -2437,7 +2442,12 @@ People,Operating model design,Mar 2026,May 2026,`;
         } catch (e) {}
         $("#restoreBar").hidden = true;
         $("#csvStatus").className = "status";
-        loadSampleFresh();
+        items = [];
+        $("#csvBox").value = "";
+        settings.title = "";
+        $("#titleBox").value = "";
+        renderItemList();
+        renderChart();
       }
       $("#btnFresh").addEventListener("click", startFresh);
       $("#restoreFresh").addEventListener("click", startFresh);
