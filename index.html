@@ -841,7 +841,10 @@
       <div class="brand">
         <span class="mark">Time<span class="tail">lane</span></span>
         <span class="tag">your plan, on a page</span>
-        <a class="suite" href="https://flatpack.projectsbyrob.co.uk"
+        <a
+          class="suite-link"
+          href="https://flatpack.projectsbyrob.co.uk"
+          title="More tools from the Flatpack suite"
           >part of the <b>Flatpack</b> suite</a
         >
       </div>
@@ -907,8 +910,8 @@
             <h3>Import CSV</h3>
             <p class="hint">
               Columns: <b>Lane, Item, Start, End, Status</b> — Lane, Item and
-              Start required. A blank End (or an End equal to the Start) makes
-              a milestone. Status: green, amber, red, blue or grey. Header row
+              Start required. A blank End (or an End equal to the Start) makes a
+              milestone. Status: green, amber, red, blue or grey. Header row
               optional.
             </p>
             <textarea
@@ -970,8 +973,7 @@
             <h3>Rows shown per lane</h3>
             <p class="hint">
               Beyond this, a lane folds the rest into a "+ n more items" strip
-              so the slide stays clean — the longest-running items stay
-              visible.
+              so the slide stays clean — the longest-running items stay visible.
             </p>
             <div class="slider-row">
               <input
@@ -1000,7 +1002,9 @@
           <div class="restorebar" id="restoreBar" hidden>
             <span>Restored your last plan — saved on this device only.</span>
             <button class="linklike" id="restoreFresh">Start fresh</button>
-            <button class="rx" id="restoreDismiss" aria-label="Dismiss">×</button>
+            <button class="rx" id="restoreDismiss" aria-label="Dismiss">
+              ×
+            </button>
           </div>
           <div class="stage-bar">
             <span class="lbl">Slide preview · 16:9</span>
@@ -1115,19 +1119,18 @@
             </tbody>
           </table>
           <p>
-            Dates can be <b>01/03/2026</b>, <b>2026-03-01</b>, <b>Mar 2026</b>
-            or <b>Q1 2026</b>. Day first, always: 04/05/2026 is 4 May, never
-            5 April. A month or quarter counts as its first day in a Start and
-            its last day in an End. Anything Timelane can't read produces a
-            warning naming the row — never a silent guess.
+            Dates can be <b>01/03/2026</b>, <b>2026-03-01</b>,
+            <b>Mar 2026</b> or <b>Q1 2026</b>. Day first, always: 04/05/2026 is
+            4 May, never 5 April. A month or quarter counts as its first day in
+            a Start and its last day in an End. Anything Timelane can't read
+            produces a warning naming the row — never a silent guess.
           </p>
           <p>
             Header row optional — with headers, column order doesn't matter.
           </p>
           <p>
-            Your plan is saved in your browser on this device so you don't
-            lose work — use <b>Clear all data and start fresh</b> to remove
-            it.
+            Your plan is saved in your browser on this device so you don't lose
+            work — use <b>Clear all data and start fresh</b> to remove it.
           </p>
           <p>
             <button class="btn btn-sec" id="btnTemplate">
@@ -1145,9 +1148,9 @@
             lane baseline.
           </p>
           <p>
-            <b>"+ n more items"</b> means a lane has more rows than fit
-            cleanly — the longest-running items stay visible and the rest fold
-            into that strip. Adjust the limit with <b>Rows shown per lane</b>
+            <b>"+ n more items"</b> means a lane has more rows than fit cleanly
+            — the longest-running items stay visible and the rest fold into that
+            strip. Adjust the limit with <b>Rows shown per lane</b>
             on the Slide tab.
           </p>
         </section>
@@ -1169,8 +1172,8 @@
           <p>
             Tick <b>Transparent background</b> in the menu to export with
             nothing behind the chart — a PNG with an alpha background, an SVG
-            without its background rectangle — for pasting straight onto
-            branded slide templates.
+            without its background rectangle — for pasting straight onto branded
+            slide templates.
           </p>
         </section>
 
@@ -1614,7 +1617,8 @@ People,Operating model design,Mar 2026,May 2026,`;
 
       /* ---- time axis: weeks / months / quarters, snapped to unit boundaries ---- */
       function floorUnit(d, unit) {
-        if (unit === "weeks") return new Date(+d - ((d.getUTCDay() + 6) % 7) * DAY); // Monday
+        if (unit === "weeks")
+          return new Date(+d - ((d.getUTCDay() + 6) % 7) * DAY); // Monday
         const y = d.getUTCFullYear(),
           m = d.getUTCMonth();
         return unit === "months" ? mkDate(y, m, 1) : mkDate(y, m - (m % 3), 1);
@@ -1629,7 +1633,8 @@ People,Operating model design,Mar 2026,May 2026,`;
    up to ~16 weeks → weeks; up to ~21 months → months; beyond → quarters */
       function buildAxis(min, max) {
         const span = (+max - +min) / DAY;
-        const unit = span <= 115 ? "weeks" : span <= 640 ? "months" : "quarters";
+        const unit =
+          span <= 115 ? "weeks" : span <= 640 ? "months" : "quarters";
         const d0 = floorUnit(min, unit);
         const d1 = nextUnit(floorUnit(max, unit), unit);
         const cells = [];
@@ -2184,7 +2189,9 @@ People,Operating model design,Mar 2026,May 2026,`;
           closeExportMenu();
       });
       exportMenu.addEventListener("keydown", (e) => {
-        const mi = [...exportMenu.querySelectorAll(".menu-item:not(:disabled)")];
+        const mi = [
+          ...exportMenu.querySelectorAll(".menu-item:not(:disabled)"),
+        ];
         const i = mi.indexOf(document.activeElement);
         if (e.key === "Escape") {
           e.stopPropagation();
@@ -2250,10 +2257,7 @@ People,Operating model design,Mar 2026,May 2026,`;
           msg += " That's a lot for one slide — consider splitting the plan.";
         /* row-by-row date problems appear below, from the same model the
            slide is drawn from — see showWarnings() */
-        showStatus(
-          model.warnings.length || res.badStatus ? "warn" : "ok",
-          msg,
-        );
+        showStatus(model.warnings.length || res.badStatus ? "warn" : "ok", msg);
         renderItemList();
         renderChart();
       }
