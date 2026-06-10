@@ -900,6 +900,17 @@
           </div>
 
           <div class="sec">
+            <h3>Actions</h3>
+            <div class="row" style="margin-top: 0">
+              <button class="btn btn-line" id="btnAdd">+ Add item</button>
+              <button class="btn btn-line" id="btnClear">
+                Clear all and load sample
+              </button>
+              <button class="btn btn-line" id="btnFresh">Start fresh</button>
+            </div>
+          </div>
+
+          <div class="sec">
             <h3>
               Items
               <span
@@ -909,12 +920,6 @@
             </h3>
             <div class="item-list" id="itemList"></div>
             <datalist id="laneList"></datalist>
-            <div class="row">
-              <button class="btn btn-line" id="btnAdd">+ Add item</button>
-              <button class="btn btn-line" id="btnSample">Load sample</button>
-              <button class="btn btn-line" id="btnClear">Clear all</button>
-              <button class="btn btn-line" id="btnFresh">Start fresh</button>
-            </div>
           </div>
         </div>
 
@@ -976,7 +981,7 @@
           <div class="slide" id="slide">
             <div class="placeholder" id="placeholder">
               <b>No items yet</b>
-              <span>Paste a CSV, load the sample, or add items by hand.</span>
+              <span>Paste a CSV or add items by hand.</span>
               <button class="linklike" id="phGuide" style="font-size: 12.5px">
                 Open the Guide
               </button>
@@ -1027,8 +1032,8 @@
             <li>
               <b>Get your data in.</b> On the Data tab, paste a CSV and press
               <b>Use this data</b>, open a .csv file, or build the plan by hand
-              with <b>+ Add item</b> (<b>Load sample</b> restores the demo
-              plan).
+              with <b>+ Add item</b> (<b>Clear all and load sample</b> restores
+              the demo plan).
             </li>
             <li>
               <b>Shape the slide.</b> On the Slide tab, set a title, pick a
@@ -1962,7 +1967,7 @@ People,Operating model design,Mar 2026,May 2026,`;
         const box = $("#itemList");
         box.innerHTML = "";
         if (!items.length) {
-          box.innerHTML = `<div class="empty-note">Nothing here yet. Import a CSV above, load the sample, or add your first item.</div>`;
+          box.innerHTML = `<div class="empty-note">Nothing here yet. Import a CSV above or add your first item.</div>`;
           return;
         }
         items.forEach((p, i) => {
@@ -2085,11 +2090,12 @@ People,Operating model design,Mar 2026,May 2026,`;
           fileStem() + ".svg",
         );
       }
-      function exportCSVFile() {
-        if (!items.length) return;
+      /* one serialiser for the CSV download AND the Import box after a
+         restore, so what you see is exactly what you'd save */
+      function itemsToCSV() {
         const q = (s) =>
           /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-        const csv =
+        return (
           "Lane,Item,Start,End,Status\n" +
           items
             .map((p) =>
@@ -2097,9 +2103,13 @@ People,Operating model design,Mar 2026,May 2026,`;
                 .map((x) => q(x || ""))
                 .join(","),
             )
-            .join("\n");
+            .join("\n")
+        );
+      }
+      function exportCSVFile() {
+        if (!items.length) return;
         downloadBlob(
-          new Blob([csv], { type: "text/csv" }),
+          new Blob([itemsToCSV()], { type: "text/csv" }),
           fileStem() + ".csv",
         );
       }
@@ -2246,15 +2256,11 @@ People,Operating model design,Mar 2026,May 2026,`;
         const last = $("#itemList").lastElementChild;
         if (last) last.querySelector("input")?.focus();
       });
-      $("#btnSample").addEventListener("click", () => {
-        $("#csvBox").value = SAMPLE;
-        applyCSV(SAMPLE);
-      });
+      /* one button, one promise: wipe whatever's there and restore the demo
+         plan (the label says exactly that, so no confirm step) */
       $("#btnClear").addEventListener("click", () => {
         items = [];
-        $("#csvStatus").className = "status";
-        renderItemList();
-        renderChart();
+        loadSampleFresh();
       });
 
       $("#titleBox").addEventListener("input", (e) => {
@@ -2445,6 +2451,8 @@ People,Operating model design,Mar 2026,May 2026,`;
       if (savedState) {
         items = savedState.items;
         settings = savedState.settings;
+        // the Import box always mirrors the restored plan, ready to edit
+        $("#csvBox").value = items.length ? itemsToCSV() : "";
         syncControls();
         renderItemList();
         renderChart();
