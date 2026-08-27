@@ -71,6 +71,28 @@ name their concepts here before adding UI:
   exactly "Auto", "Months", "Quarters" — Auto picks weeks /
   months / quarters from the range, forced units affect gridlines
   and labels only (bars never move)
+- "year start" — the month the plan's year begins; the "Year
+  starts" control (Slide tab, Year section). January is the
+  calendar year and the default. Quarters align to it (April →
+  Q1 is Apr–Jun) and year markers move to that month. A quarter
+  typed in the data ("Q1 2026") means the plan year that STARTS
+  in that year, so with an April start "Q4 2026" is Jan–Mar 2027
+- "year label" — how the year is named in axis labels; the "Year
+  label" control offers exactly "2026", "FY26", "FY2026", "FY27"
+  (named by the year it ends) and "FY26/27", each shown as a live
+  example from the plan on screen. It renames the year only —
+  never moves a bar or a gridline
+- "range" — the slice of time the slide shows; the Range control
+  (Slide tab) offers "Whole plan" (default), every year and every
+  quarter the plan touches (named by the year label), and
+  "Custom…", which reveals "From" and "To" taking the same date
+  formats as the data. Either Custom end may be blank (open to
+  that end of the plan); an unreadable one leaves that end open
+  and says so, never guesses. Items outside the range are absent,
+  an item crossing an edge is cut there and drawn FLUSH and
+  square to the rail (never rounded — a clipped item must not
+  read as one that stops), a lane that empties keeps its band,
+  and the footer counts only what the slide shows
 - "fold" / "+ n more items" — lane overflow behaviour
 - "slide" — what you see and export
 - "Show folded items strip" — Slide-tab toggle; off hides the
@@ -115,7 +137,26 @@ item:
     (except the padded coarser-than-range case); Auto identical
     to unforced behaviour. Repeat one forced unit in a scoped
     lane view.
-11. Sub-plans: a scoped lane WITH sub-lanes (bands in first-
+11. Range: a year window and a quarter window (axis spans exactly
+    the window, first cell named for the window's own first day,
+    items outside absent, crossing items flush and square to the
+    rail, empty lanes keep their bands, footer counts what is
+    shown); Custom with both ends, one end, an unreadable end and
+    From after To (each says so); a range that catches nothing;
+    a range whose year the plan no longer contains (falls back to
+    the Whole plan); range + scope together; a windowed export.
+    "Whole plan" must render byte-identically to no Range feature
+    at all.
+12. Fiscal years: with "Year starts" on January every render is
+    byte-identical to the calendar behaviour (this is the first
+    thing to check after any axis change). With April and one
+    other start: quarter cells begin on the year-start month,
+    year markers sit there too, all five year labels render and
+    thin without collision on the long AND short range in Auto /
+    Months / Quarters, dd/mm and month dates never move, and
+    "Q1 2026"-style data lands in the fiscal quarter. Repeat one
+    in a scoped lane view and in SVG/PNG exports.
+13. Sub-plans: a scoped lane WITH sub-lanes (bands in first-
     appearance order, unlabelled band on top, axis recomputed,
     whole-plan folded items all visible) and one WITHOUT (single
     band); a scoped view with each Slide toggle off; scoped
@@ -137,3 +178,10 @@ rows in the sample.
 - Sub-plans: shipped — optional "Sub-lane" CSV column, lane
   drill-down mirroring Orgami's View team pattern; one level
   only (no drilling into sub-lanes).
+- Range: shipped — a slide-wide window (Whole plan / year /
+  quarter / Custom From-To). No per-lane ranges, and clipping
+  never hides that an item continues.
+- Fiscal years: shipped — a year-start month plus a year-label
+  format, both slide-wide settings. No per-row year column, no
+  arbitrary start DATE (quarters stay whole months), and the
+  footer's date range stays in real calendar months.

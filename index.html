@@ -480,6 +480,35 @@
         padding: 8px 9px;
         color: var(--ink);
       }
+      select {
+        width: 100%;
+        font-family: var(--ui);
+        font-size: 13px;
+        border: 1px solid var(--hair);
+        border-radius: 6px;
+        padding: 7px 9px;
+        color: var(--ink);
+        background: #fff;
+        cursor: pointer;
+      }
+      select:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: -1px;
+      }
+      .fld + select {
+        margin-bottom: 10px;
+      }
+      .fld-row {
+        display: flex;
+        gap: 9px;
+      }
+      .fld-row[hidden] {
+        display: none; /* flex would otherwise beat the hidden attribute */
+      }
+      .fld-row > div {
+        flex: 1;
+        min-width: 0;
+      }
       .swatches {
         display: flex;
         gap: 8px;
@@ -1136,6 +1165,69 @@
             </div>
           </div>
           <div class="sec">
+            <h3>Year</h3>
+            <p class="hint">
+              Set the month your year starts and quarters line up with it —
+              handy when the financial year isn't the calendar year.
+            </p>
+            <label class="fld" for="yearStart">Year starts</label>
+            <select id="yearStart">
+              <option value="0">January (calendar year)</option>
+              <option value="1">February</option>
+              <option value="2">March</option>
+              <option value="3">April</option>
+              <option value="4">May</option>
+              <option value="5">June</option>
+              <option value="6">July</option>
+              <option value="7">August</option>
+              <option value="8">September</option>
+              <option value="9">October</option>
+              <option value="10">November</option>
+              <option value="11">December</option>
+            </select>
+            <label class="fld" for="yearLabel">Year label</label>
+            <select id="yearLabel">
+              <option value="cal"></option>
+              <option value="fy2"></option>
+              <option value="fy4"></option>
+              <option value="fy2end"></option>
+              <option value="span"></option>
+            </select>
+            <p class="hint" id="yearHint" style="margin-bottom: 0"></p>
+          </div>
+          <div class="sec">
+            <h3>Range</h3>
+            <p class="hint">
+              Narrow the slide to one year or quarter. Items outside it drop
+              off; anything crossing an edge runs flush to it.
+            </p>
+            <label class="fld" for="rangePick">Show</label>
+            <select id="rangePick">
+              <option value="all">Whole plan</option>
+            </select>
+            <div id="rangeCustom" class="fld-row" hidden>
+              <div>
+                <label class="fld" for="rangeFrom">From</label>
+                <input
+                  type="text"
+                  id="rangeFrom"
+                  maxlength="20"
+                  placeholder="Q1 2027"
+                />
+              </div>
+              <div>
+                <label class="fld" for="rangeTo">To</label>
+                <input
+                  type="text"
+                  id="rangeTo"
+                  maxlength="20"
+                  placeholder="Q4 2027"
+                />
+              </div>
+            </div>
+            <p class="hint" id="rangeHint" style="margin-bottom: 0"></p>
+          </div>
+          <div class="sec">
             <h3>Detail</h3>
             <label class="chk"
               ><input type="checkbox" id="chkToday" checked /> Show the today
@@ -1326,6 +1418,25 @@
             long ranges, labels thin out evenly rather than collide.
           </p>
           <p>
+            If your year isn't the calendar year, set <b>Year starts</b> on the
+            Slide tab — quarters then line up with it (an April start makes
+            Apr–Jun Q1), and <b>Year label</b> chooses how the year is named:
+            <b>2026</b>, <b>FY26</b>, <b>FY2026</b>, <b>FY27</b> (named by the
+            year it ends) or <b>FY26/27</b>. A quarter in your data always means
+            the plan year that <i>starts</i> in that year — with an April start,
+            <b>Q4 2026</b> is Jan–Mar 2027.
+          </p>
+          <p>
+            <b>Range</b> on the Slide tab narrows the slide to one year or
+            quarter of the plan — the list is built from your own dates and
+            named the way the axis names them. Items outside the range are
+            simply absent; an item that runs through an edge is cut there and
+            drawn flush to it, so it never looks as though it stops. Pick
+            <b>Custom…</b> for any other span: <b>From</b> and <b>To</b> take
+            the same date formats as your data, and either can be left blank to
+            run to the end of the plan.
+          </p>
+          <p>
             <b>View lane →</b> (hover or Tab to a lane name, or click a "+ n
             more items" strip) re-draws the slide with just that lane — its
             optional <b>Sub-lane</b> values become the bands, and items without
@@ -1377,6 +1488,11 @@
         theme: "marine",
         maxRows: 4,
         axis: "auto", // "auto" | "months" | "quarters"
+        yearStart: 0, // month the year starts, 0-11 (0 = calendar year)
+        yearLabel: "cal", // key into YEAR_FMTS
+        range: "all", // "all" | "y:2026" | "q:2026:3" | "custom"
+        rangeFrom: "", // Custom… ends, kept as typed and parsed at render
+        rangeTo: "",
         today: true,
         foldStrip: true,
         milestones: true,
@@ -1701,6 +1817,46 @@ People,Operating model design,Mar 2026,May 2026,,`;
       function daysInMonth(y, m) {
         return new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
       }
+      /* first of a month index that may run past either end of its year */
+      function monthStart(y, m) {
+        return mkDate(y + Math.floor(m / 12), ((m % 12) + 12) % 12, 1);
+      }
+      /* ---- the plan year: starts at settings.yearStart, named by yearLabel.
+   January + "cal" is the calendar year, and every date rule below collapses
+   to plain calendar behaviour there. Quarters are always whole months, so a
+   year start only shifts which months open a quarter. */
+      const yy = (y) => String(((y % 100) + 100) % 100).padStart(2, "0");
+      const YEAR_FMTS = {
+        cal: { long: (a) => String(a), short: (a) => "’" + yy(a) },
+        fy2: { long: (a) => "FY" + yy(a), short: (a) => "FY" + yy(a) },
+        fy4: { long: (a) => "FY" + a, short: (a) => "FY" + yy(a) },
+        fy2end: { long: (a, b) => "FY" + yy(b), short: (a, b) => "FY" + yy(b) },
+        span: {
+          long: (a, b) => "FY" + yy(a) + "/" + yy(b),
+          short: (a, b) => "FY" + yy(a) + "/" + yy(b),
+        },
+      };
+      /* the calendar year the plan year containing d began in */
+      function yearStartOf(d) {
+        const y = d.getUTCFullYear();
+        return d.getUTCMonth() >= settings.yearStart ? y : y - 1;
+      }
+      function yearName(a, short) {
+        const f = YEAR_FMTS[settings.yearLabel] || YEAR_FMTS.cal;
+        return (short ? f.short : f.long)(a, a + 1);
+      }
+      const yearText = (d, short) => yearName(yearStartOf(d), short);
+      /* first and last day of a plan year, and of one of its quarters */
+      const yearSpan = (a) => ({
+        a: monthStart(a, settings.yearStart),
+        b: new Date(+monthStart(a + 1, settings.yearStart) - DAY),
+      });
+      const quarterSpan = (a, q) => ({
+        a: monthStart(a, settings.yearStart + (q - 1) * 3),
+        b: new Date(+monthStart(a, settings.yearStart + q * 3) - DAY),
+      });
+      /* months from the start of d's quarter */
+      const qOff = (m) => (((m - settings.yearStart) % 3) + 3) % 3;
       /* UK-first: dd/mm/yyyy, ISO yyyy-mm-dd, "Mar 2026", "Q1 2026".
    An ambiguous day/month always resolves dd/mm, never mm/dd. A month or
    quarter means its first day in a Start and its last day in an End.
@@ -1714,8 +1870,11 @@ People,Operating model design,Mar 2026,May 2026,,`;
         if ((m = s.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})$/)))
           return mkDate(+m[3], +m[2] - 1, +m[1]);
         if ((m = s.match(/^q([1-4])\s*(\d{4})$/i))) {
-          const mo = (+m[1] - 1) * 3 + (isEnd ? 2 : 0),
-            y = +m[2];
+          /* the year typed is the year the plan year STARTS in, so with an
+             April year start "Q4 2026" is Jan-Mar 2027 */
+          const raw = settings.yearStart + (+m[1] - 1) * 3 + (isEnd ? 2 : 0),
+            y = +m[2] + Math.floor(raw / 12),
+            mo = raw % 12;
           return mkDate(y, mo, isEnd ? daysInMonth(y, mo) : 1);
         }
         if ((m = s.match(/^([a-z]{3,9})\s+(\d{4})$/i))) {
@@ -1802,6 +1961,59 @@ People,Operating model design,Mar 2026,May 2026,,`;
         return { lanes, warnings, plotted };
       }
 
+      /* the plan's own first and last day, whatever the slide is showing */
+      function planExtent(model) {
+        let a = Infinity,
+          b = -Infinity;
+        model.lanes.forEach((l) => {
+          l.bars.forEach((x) => {
+            a = Math.min(a, +x.start);
+            b = Math.max(b, +x.end);
+          });
+          l.miles.forEach((x) => {
+            a = Math.min(a, +x.start);
+            b = Math.max(b, +x.start);
+          });
+        });
+        return a === Infinity ? null : { min: new Date(a), max: new Date(b) };
+      }
+      /* The Range control resolved against today's plan: {win, note}, where a
+   null win is the whole plan. Custom dates are parsed exactly like the ones
+   in your data — an unreadable end is left open and SAID so under the
+   control, never guessed at. */
+      function planWindow(model) {
+        const r = settings.range;
+        let m;
+        if ((m = /^y:(\d{4})$/.exec(r)))
+          return { win: yearSpan(+m[1]), note: "" };
+        if ((m = /^q:(\d{4}):([1-4])$/.exec(r)))
+          return { win: quarterSpan(+m[1], +m[2]), note: "" };
+        if (r !== "custom") return { win: null, note: "" };
+        const fromRaw = settings.rangeFrom.trim(),
+          toRaw = settings.rangeTo.trim();
+        if (!fromRaw && !toRaw) return { win: null, note: "" };
+        const ext = planExtent(model);
+        if (!ext) return { win: null, note: "" };
+        const bad = [];
+        let a = null,
+          b = null;
+        if (fromRaw && !(a = parseDate(fromRaw, false))) bad.push(fromRaw);
+        if (toRaw && !(b = parseDate(toRaw, true))) bad.push(toRaw);
+        let note = bad.length
+          ? `Couldn't read ${bad.map((x) => `"${x}"`).join(" or ")} — try 01/03/2026, 2026-03-01, Mar 2026 or Q1 2026.`
+          : "";
+        a = a || ext.min;
+        b = b || ext.max;
+        if (+a > +b)
+          return {
+            win: null,
+            note:
+              (note ? note + " " : "") +
+              "From is after To — showing the whole plan.",
+          };
+        return { win: { a, b }, note };
+      }
+
       /* ================= layout + svg ================= */
       const L = {
         plotW: 1000, // time-axis width in content units
@@ -1819,13 +2031,17 @@ People,Operating model design,Mar 2026,May 2026,,`;
           return new Date(+d - ((d.getUTCDay() + 6) % 7) * DAY); // Monday
         const y = d.getUTCFullYear(),
           m = d.getUTCMonth();
-        return unit === "months" ? mkDate(y, m, 1) : mkDate(y, m - (m % 3), 1);
+        return unit === "months"
+          ? monthStart(y, m)
+          : monthStart(y, m - qOff(m));
       }
       function nextUnit(d, unit) {
         if (unit === "weeks") return new Date(+d + 7 * DAY);
-        const m =
-          d.getUTCMonth() + (unit === "months" ? 1 : 3 - (d.getUTCMonth() % 3));
-        return mkDate(d.getUTCFullYear() + Math.floor(m / 12), m % 12, 1);
+        const m = d.getUTCMonth();
+        return monthStart(
+          d.getUTCFullYear(),
+          m + (unit === "months" ? 1 : 3 - qOff(m)),
+        );
       }
       /* Auto units keep gridlines and labels clean at any range: up to ~16
    weeks → weeks; up to ~21 months → months; beyond → quarters. The Axis
@@ -1833,14 +2049,17 @@ People,Operating model design,Mar 2026,May 2026,,`;
    unit, so forcing a unit never moves a bar — it changes only which
    gridlines and labels are drawn. One exception: a forced unit coarser than
    the whole range pads the domain out to unit boundaries, so the axis is
-   never unitless. */
-      function buildAxis(min, max) {
+   never unitless — except on a windowed slide, whose edges are the point. */
+      function buildAxis(min, max, exact) {
         const span = (+max - +min) / DAY;
         const auto =
           span <= 115 ? "weeks" : span <= 640 ? "months" : "quarters";
         const unit = settings.axis === "auto" ? auto : settings.axis;
-        let d0 = floorUnit(min, auto);
-        let d1 = nextUnit(floorUnit(max, auto), auto);
+        /* a Range window ends on its last day, and the scale end is exclusive */
+        let d0 = exact ? min : floorUnit(min, auto);
+        let d1 = exact
+          ? new Date(+max + DAY)
+          : nextUnit(floorUnit(max, auto), auto);
         const interior = (a, b) => {
           const out = [];
           for (
@@ -1852,7 +2071,7 @@ People,Operating model design,Mar 2026,May 2026,,`;
           return out;
         };
         let mids = interior(d0, d1);
-        if (mids.length < 2) {
+        if (!exact && mids.length < 2) {
           d0 = floorUnit(min, unit);
           d1 = nextUnit(floorUnit(max, unit), unit);
           mids = interior(d0, d1);
@@ -1861,15 +2080,37 @@ People,Operating model design,Mar 2026,May 2026,,`;
             mids = interior(d0, d1);
           }
         }
-        return { unit, d0, d1, marks: [d0, ...mids, d1] };
+        return { unit, d0, d1, exact: !!exact, marks: [d0, ...mids, d1] };
       }
-      function cellLabel(d, unit, withYear) {
-        const y = d.getUTCFullYear(),
-          m = d.getUTCMonth();
-        if (unit === "weeks")
-          return d.getUTCDate() + " " + MON[m] + (withYear ? " " + y : "");
-        if (unit === "months") return MON[m] + (withYear ? " " + y : "");
-        return "Q" + (m / 3 + 1) + (withYear ? " " + y : "");
+      function cellLabel(d, unit, withYear, short) {
+        const m = d.getUTCMonth(),
+          y = withYear ? " " + yearText(d, short) : "";
+        if (unit === "weeks") return d.getUTCDate() + " " + MON[m] + y;
+        if (unit === "months") return MON[m] + y;
+        return "Q" + (((m - settings.yearStart + 12) % 12) / 3 + 1) + y;
+      }
+
+      /* a bar is a rounded rect, except where the Range window cut it: that
+         side runs square to the rail, so a clipped item never reads as one
+         that starts or ends there */
+      function barShape(b, y, fill) {
+        const h = L.barH,
+          x1 = b.x1,
+          x2 = b.x2,
+          n = (v) => v.toFixed(1);
+        if (!b.openL && !b.openR)
+          return `<rect x="${n(x1)}" y="${n(y)}" width="${n(x2 - x1)}" height="${h}" rx="4" fill="${fill}"/>`;
+        const rad = Math.min(4, (x2 - x1) / 2),
+          lr = b.openL ? 0 : rad, // corner radius, left end then right
+          rr = b.openR ? 0 : rad;
+        const arc = (r, ex, ey) =>
+          r ? `A${n(r)} ${n(r)} 0 0 1 ${n(ex)} ${n(ey)}` : "";
+        return (
+          `<path d="M${n(x1 + lr)} ${n(y)} H${n(x2 - rr)}${arc(rr, x2, y + rr)}` +
+          `V${n(y + h - rr)}${arc(rr, x2 - rr, y + h)}` +
+          `H${n(x1 + lr)}${arc(lr, x1, y + h - lr)}` +
+          `V${n(y + lr)}${arc(lr, x1 + lr, y)}Z" fill="${fill}"/>`
+        );
       }
 
       /* greedy sub-row stacking; list must arrive sorted by x1 */
@@ -1923,6 +2164,9 @@ People,Operating model design,Mar 2026,May 2026,,`;
           updateExportUI();
           ph.style.display = "flex";
           $("#stageCount").textContent = "";
+          syncYearOptions(new Date());
+          syncRangeOptions(model);
+          $("#rangeHint").textContent = "";
           slide.classList.remove("transparent");
           return;
         }
@@ -1933,11 +2177,17 @@ People,Operating model design,Mar 2026,May 2026,,`;
         );
         slide.classList.toggle("transparent", settings.transparent);
 
+        syncRangeOptions(model);
         const r = composeSVG(model, true);
+        syncYearOptions(r.yearRef);
+        $("#rangeHint").textContent =
+          r.note || (r.count === 0 ? "Nothing falls in this range." : "");
         slide.insertAdjacentHTML("beforeend", r.svg);
         $("#stageCount").textContent = scopeLane
           ? `${scopeLane} · ${r.count} item${r.count === 1 ? "" : "s"} · ${r.range}`
-          : `${model.plotted} item${model.plotted === 1 ? "" : "s"} · ${model.lanes.length} lane${model.lanes.length === 1 ? "" : "s"} · ${r.range}`;
+          : /* the count is what the slide shows: a Range window can leave
+               items out, and the footer must never overstate the picture */
+            `${r.count} item${r.count === 1 ? "" : "s"} · ${model.lanes.length} lane${model.lanes.length === 1 ? "" : "s"} · ${r.range}`;
         updateExportUI();
       }
 
@@ -2048,8 +2298,31 @@ People,Operating model design,Mar 2026,May 2026,,`;
       function composeSVG(model, nav) {
         const T = THEMES[settings.theme];
         const scope = scopeLane ? scopedBands(model) : null;
-        const bands = scope ? scope.bands : model.lanes;
-        const count = scope ? scope.count : model.plotted;
+        let bands = scope ? scope.bands : model.lanes;
+        let count = scope ? scope.count : model.plotted;
+        /* the Range window: items outside it are simply absent, and an item
+           that runs through an edge is cut there and drawn flush to the rail —
+           a lane that empties out still keeps its band, as it does when
+           milestones are hidden */
+        const { win, note } = planWindow(model);
+        if (win) {
+          bands = bands.map((lane) => ({
+            ...lane,
+            bars: lane.bars
+              .filter((b) => +b.end >= +win.a && +b.start <= +win.b)
+              .map((b) => ({
+                ...b,
+                start: +b.start < +win.a ? win.a : b.start,
+                end: +b.end > +win.b ? win.b : b.end,
+                openL: +b.start < +win.a,
+                openR: +b.end > +win.b,
+              })),
+            miles: lane.miles.filter(
+              (m) => +m.start >= +win.a && +m.start <= +win.b,
+            ),
+          }));
+          count = bands.reduce((n, l) => n + l.bars.length + l.miles.length, 0);
+        }
         let minT = Infinity,
           maxT = -Infinity;
         bands.forEach((lane) => {
@@ -2062,7 +2335,11 @@ People,Operating model design,Mar 2026,May 2026,,`;
             maxT = Math.max(maxT, +m.start);
           });
         });
-        const axis = buildAxis(new Date(minT), new Date(maxT));
+        if (win) {
+          minT = +win.a;
+          maxT = +win.b;
+        }
+        const axis = buildAxis(new Date(minT), new Date(maxT), !!win);
         const day0 = dayOf(axis.d0),
           day1 = dayOf(axis.d1);
         const x = (dn) => ((dn - day0) / (day1 - day0)) * L.plotW;
@@ -2167,9 +2444,7 @@ People,Operating model design,Mar 2026,May 2026,,`;
             row.forEach((b, bi) => {
               const by = topY + ri * L.rowH + (L.rowH - L.barH) / 2;
               const st = statusFill(T, b.status);
-              cp.push(
-                `<rect x="${b.x1.toFixed(1)}" y="${by.toFixed(1)}" width="${(b.x2 - b.x1).toFixed(1)}" height="${L.barH}" rx="4" fill="${st.bg}"/>`,
-              );
+              cp.push(barShape(b, by, st.bg));
               /* label inside the bar when it fits, otherwise beside it,
                  truncated to the room before the next bar in the row */
               const fs = 10.5;
@@ -2324,15 +2599,24 @@ People,Operating model design,Mar 2026,May 2026,,`;
             partial: x2 - x1 < fullW * 0.55,
           });
         }
+        /* a windowed slide starts exactly where you asked it to, so its
+           opening cell is named for the window's own first day rather than for
+           the week or month that runs into it */
+        if (axis.exact && segsAx.length)
+          segsAx[0].u =
+            axis.unit === "weeks" ? axis.d0 : floorUnit(axis.d0, axis.unit);
         /* year markers always survive thinning; quarter axes with few cells
            carry the year on every label ("Q3 ’26") */
         const isMark = (sg, i) =>
-          i === 0 || (axis.unit !== "weeks" && sg.u.getUTCMonth() === 0);
+          i === 0 ||
+          (axis.unit !== "weeks" && sg.u.getUTCMonth() === settings.yearStart);
         const allYears = axis.unit === "quarters" && segsAx.length <= 6;
         const textFor = (sg, i) => {
-          let lab = cellLabel(sg.u, axis.unit, isMark(sg, i) || allYears);
-          if (labW(lab) > sg.w - 6) lab = lab.replace(/ \d\d(\d\d)$/, " ’$1"); // "Jan 2027" → "Jan ’27"
-          if (labW(lab) > sg.w - 6 && !isMark(sg, i) && !allYears)
+          const wide = isMark(sg, i) || allYears;
+          let lab = cellLabel(sg.u, axis.unit, wide);
+          if (labW(lab) > sg.w - 6)
+            lab = cellLabel(sg.u, axis.unit, wide, true); // "Jan 2027" → "Jan ’27"
+          if (labW(lab) > sg.w - 6 && !wide)
             lab = cellLabel(sg.u, axis.unit, false);
           return lab;
         };
@@ -2370,6 +2654,20 @@ People,Operating model design,Mar 2026,May 2026,,`;
           if (ok) {
             drawn = cand;
             break;
+          }
+        }
+        /* last resort: year markers are exempt from thinning, so two of them
+           can still meet at the axis edge (a partial opening cell against the
+           first full year, or a long year label). Drop the least useful of the
+           pair — a partial opening cell first, then any plain label — so the
+           axis never overlaps itself, whatever the year label says. */
+        const worth = (d) => (isMark(d.sg, d.i) ? (d.i === 0 ? 1 : 2) : 0);
+        for (let j = 1; j < drawn.length; j++) {
+          const a = drawn[j - 1],
+            b = drawn[j];
+          if ((labW(a.lab) + labW(b.lab)) / 2 + 6 > b.sg.cx - a.sg.cx) {
+            drawn.splice(worth(b) > worth(a) ? j - 1 : j, 1);
+            j--;
           }
         }
         drawn.forEach((d) =>
@@ -2416,6 +2714,8 @@ People,Operating model design,Mar 2026,May 2026,,`;
           svg,
           count,
           bands: bands.length,
+          yearRef: axis.d0,
+          note,
           range: fmtMonth(new Date(minT)) + " – " + fmtMonth(new Date(maxT)),
         };
       }
@@ -2773,6 +3073,75 @@ People,Operating model design,Mar 2026,May 2026,,`;
         $("#maxRowsVal").textContent = e.target.value;
         renderChart();
       });
+      /* every Year label option shows what it would actually say for the year
+         the axis opens on, so the choice needs no explaining */
+      function syncYearOptions(ref) {
+        const d = ref instanceof Date && !isNaN(+ref) ? ref : new Date();
+        const a = yearStartOf(d);
+        $("#yearLabel")
+          .querySelectorAll("option")
+          .forEach((o) => {
+            o.textContent = YEAR_FMTS[o.value].long(a, a + 1);
+          });
+        $("#yearHint").textContent =
+          settings.yearStart === 0
+            ? "Quarters run Jan–Mar, Apr–Jun, Jul–Sep, Oct–Dec."
+            : "Q1 starts in " +
+              MON[settings.yearStart] +
+              '. A quarter typed in your data ("Q1 2026") means the plan year starting that year.';
+      }
+      /* the Range picker lists the years and quarters this plan actually
+         touches, named the way the axis names them; a pick the plan no longer
+         contains falls back to the Whole plan, as a deleted scoped lane does */
+      function syncRangeOptions(model) {
+        const sel = $("#rangePick"),
+          ext = planExtent(model),
+          years = [],
+          quarters = [];
+        if (ext)
+          for (let y = yearStartOf(ext.min); y <= yearStartOf(ext.max); y++) {
+            years.push([`y:${y}`, yearName(y)]);
+            for (let q = 1; q <= 4; q++) {
+              const sp = quarterSpan(y, q);
+              if (+sp.b >= +ext.min && +sp.a <= +ext.max)
+                quarters.push([`q:${y}:${q}`, `Q${q} ${yearName(y)}`]);
+            }
+          }
+        const grp = (label, list) =>
+          list.length
+            ? `<optgroup label="${label}">` +
+              list
+                .map(([v, t]) => `<option value="${v}">${esc(t)}</option>`)
+                .join("") +
+              "</optgroup>"
+            : "";
+        const html =
+          '<option value="all">Whole plan</option>' +
+          grp("Years", years) +
+          grp("Quarters", quarters) +
+          '<option value="custom">Custom…</option>';
+        if (sel.dataset.sig !== html) {
+          sel.innerHTML = html;
+          sel.dataset.sig = html;
+        }
+        if (![...sel.options].some((o) => o.value === settings.range))
+          settings.range = "all";
+        sel.value = settings.range;
+        $("#rangeCustom").hidden = settings.range !== "custom";
+      }
+      $("#rangePick").addEventListener("change", (e) => {
+        settings.range = e.target.value;
+        $("#rangeCustom").hidden = settings.range !== "custom";
+        renderChart();
+      });
+      $("#rangeFrom").addEventListener("input", (e) => {
+        settings.rangeFrom = e.target.value;
+        renderChart();
+      });
+      $("#rangeTo").addEventListener("input", (e) => {
+        settings.rangeTo = e.target.value;
+        renderChart();
+      });
       const syncAxisSeg = () =>
         document
           .querySelectorAll(".seg")
@@ -2786,6 +3155,14 @@ People,Operating model design,Mar 2026,May 2026,,`;
           renderChart();
         }),
       );
+      $("#yearStart").addEventListener("change", (e) => {
+        settings.yearStart = +e.target.value;
+        renderChart();
+      });
+      $("#yearLabel").addEventListener("change", (e) => {
+        settings.yearLabel = e.target.value;
+        renderChart();
+      });
       $("#chkToday").addEventListener("change", (e) => {
         settings.today = e.target.checked;
         renderChart();
@@ -2941,6 +3318,20 @@ People,Operating model design,Mar 2026,May 2026,,`;
               theme: THEMES[st.theme] ? st.theme : "marine",
               maxRows: Math.min(8, Math.max(2, +st.maxRows || 4)),
               axis: ["months", "quarters"].includes(st.axis) ? st.axis : "auto",
+              yearStart:
+                Number.isInteger(+st.yearStart) &&
+                +st.yearStart >= 0 &&
+                +st.yearStart <= 11
+                  ? +st.yearStart
+                  : 0,
+              yearLabel: ["fy2", "fy4", "fy2end", "span"].includes(st.yearLabel)
+                ? st.yearLabel
+                : "cal",
+              range: /^(all|custom|y:\d{4}|q:\d{4}:[1-4])$/.test(st.range)
+                ? st.range
+                : "all",
+              rangeFrom: String(st.rangeFrom ?? "").slice(0, 20),
+              rangeTo: String(st.rangeTo ?? "").slice(0, 20),
               today: st.today !== false,
               foldStrip: st.foldStrip !== false,
               milestones: st.milestones !== false,
@@ -2962,6 +3353,11 @@ People,Operating model design,Mar 2026,May 2026,,`;
         $("#maxRows").value = settings.maxRows;
         $("#maxRowsVal").textContent = settings.maxRows;
         syncAxisSeg();
+        $("#yearStart").value = settings.yearStart;
+        $("#yearLabel").value = settings.yearLabel;
+        $("#rangeFrom").value = settings.rangeFrom;
+        $("#rangeTo").value = settings.rangeTo;
+        $("#rangeCustom").hidden = settings.range !== "custom";
         $("#chkToday").checked = settings.today;
         $("#chkFoldStrip").checked = settings.foldStrip;
         $("#chkMilestones").checked = settings.milestones;
